@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <getopt.h>
 
 int main(int argc, char *argv[]) {
 	int opt;
@@ -42,36 +46,73 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	//CODIFICAR
 	if (flag_codificar == 1) {
-
 		//checa se passou todos os argumentos necessarios
-		if (livro_cifra == NULL || mensagem_original == NULL || mensagem_codificada == NULL || arquivo_chaves == NULL) {
-		fprintf(stderr, "Opções faltando\n");
-		return 1;
+		if ((livro_cifra == NULL) || (mensagem_original == NULL) || (mensagem_codificada == NULL) || (arquivo_chaves == NULL)) {
+			fprintf(stderr, "tenha certeza de inserir todas as opcoes\n");
+			return 1;
 		}
 
-        // Abre o arquivo do livro cifra
-        FILE *f_livro = fopen(livro_cifra, "r");
-        if (f_livro == NULL) {
-            fprintf(stderr, "Erro ao abrir o arquivo do livro cifra\n");
-            return 1;
-        }
+		//abre o arquivo do livro cifra para leitura
+		FILE *f_livro = fopen(livro_cifra, "r");
 
-        // Lê o conteúdo do livro cifra
-        char livro[TAM_LIVRO];
-        size_t len_livro = fread(livro, 1, TAM_LIVRO, f_livro);
-        fclose(f_livro);
+		//veririca se houve algum erro ao abri-lo
+		if (f_livro == NULL) {
+			fprintf(stderr, "erro ao abrir o arquivo do livro cifra\n");
+			return 1;
+		}
+		
+		fclose(f_livro);
 
-        // Abre o arquivo da mensagem original
-        FILE *f_mensagem = fopen(mensagem_original, "r");
-        if (f_mensagem == NULL) {
-            fprintf(stderr, "Erro ao abrir o arquivo da mensagem original\n");
-            return 1;
-        }
+		//abre o arquivo da mensagem original para leitura
+		FILE *f_mensagem_original = fopen(mensagem_original, "r");
 
-        // Lê o conteúdo da mensagem original
-        char mensagem[TAM_LIVRO];
-        size_t len_mensagem = fread(mensagem, 1, TAM_LIVRO, f_mensagem);
-        fclose(f_mensagem);
-    }
+		//veririca se houve algum erro ao abri-lo
+		if (f_mensagem_original == NULL) {
+			fprintf(stderr, "erro ao abrir o arquivo da mensagem original\n");
+			return 1;
+		}
+
+		fclose(f_mensagem_original);
+	}
+
+
+	//DECODIFICAR
+	if (flag_decodificar == 1) {
+		//checa se passou todos os argumentos necessarios
+		if ((mensagem_codificada == NULL) || (mensagem_decodificada == NULL) || ((livro_cifra == NULL) && (arquivo_chaves == NULL))) {
+			fprintf(stderr, "tenha certeza de inserir todas as opcoes\n");
+			return 1;
+		}
+
+	//verifica qual tipo de decodificacao sera feita, usando o livro cifra ou o arquivo de chaves
+	if (livro_cifra != NULL){
+
+		//abre o arquivo do livro cifra para leitura
+		FILE *f_livro = fopen(livro_cifra, "r");
+
+		//veririca se houve algum erro ao abri-lo
+		if (f_livro == NULL) {
+			fprintf(stderr, "erro ao abrir o arquivo do livro cifra\n");
+			return 1;
+		}
+		
+		fclose(f_livro);
+	} else {
+		
+	}
+
+
+
+
+	//abre o arquivo da mensagem original para leitura
+	FILE *f_mensagem_original = fopen(mensagem_original, "r");
+	if (f_mensagem_original == NULL) {
+		fprintf(stderr, "erro ao abrir o arquivo da mensagem original\n");
+		return 1;
+	}
+
+	fclose(f_mensagem_original);
+	}
 }
