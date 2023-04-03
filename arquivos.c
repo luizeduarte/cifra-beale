@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 	char *arquivo_chaves = NULL;
 	char *mensagem_decodificada = NULL;
 	char *opcoes = "e:d:b:m:o:c:i:";
-	struct caracteres* lista_chars = NULL;
+	struct caractere* lista_chars = NULL;
 	int num_chave = 0;
 
 	//processa os argumentos da linha de comando
@@ -70,8 +70,8 @@ int main(int argc, char *argv[]) {
 		verifica_arquivos(4, f_livro, f_mensagem_original, f_mensagem_codificada, f_chaves);
 
 		codifica(lista_chars, f_mensagem_original, f_mensagem_codificada);
-		//criar funcao para armazenar no arquivo de chave as chaves
-
+		cria_arq_chaves(lista_chars, f_chaves);
+		
 		fclose(f_chaves);
 		fclose(f_mensagem_codificada);
 		fclose(f_livro);
@@ -109,16 +109,12 @@ int main(int argc, char *argv[]) {
 
 			//abre o arquivo de chaves para leitura
 			FILE* f_chaves = fopen(arquivo_chaves, "r");
-			//abre o arquivo da mensagem codificada para leitura
-			FILE* f_mensagem_codificada = fopen(mensagem_codificada, "r");
-			//abre o arquivo da mensagem decodificada para escrita
-			FILE* f_mensagem_decodificada = fopen(mensagem_decodificada, "w");
 
 			verifica_arquivos(3, f_chaves, f_mensagem_codificada, f_mensagem_decodificada);
 
 			decodifica(lista_chars, f_mensagem_codificada, f_mensagem_decodificada);
 
-					//criar funcao para transformar o arquivo de chaves em lista
+			cria_lista(lista_chars, f_chaves);
 			fclose(f_chaves);
 		}	
 	
