@@ -1,6 +1,6 @@
-todo: ajeitar num_chave
-todo: funcao seleciona_chaves, o que fazer quando nao encontra uma chave?
-todo: em insere_lista, verificar se eh o primeiro elemento ou menor que ele 
+TODO: ajeitar num_chave
+TODO: funcao seleciona_chaves, o que fazer quando nao encontra uma chave?
+TODO: em insere_lista, verificar se eh o primeiro elemento ou menor que ele 
 
 
 void adiciona_caractere(char letra, struct caracteres* aux){
