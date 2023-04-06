@@ -43,17 +43,6 @@ void adiciona_chave(int* num_chave, struct caractere* aux){
 
 }
 
-void adiciona_caracter(char letra, struct caractere* aux){
-	struct caractere* novo = aloca_caracter(letra);
-
-	if (aux == NULL){	//lista vazia, sera o primeiro elemento
-		aux = novo;
-	} else {
-		novo->prox = aux->prox;
-		aux->prox = novo;
-	}
-}
-
 void insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
 	struct caractere* aux = lista_chars;
 
@@ -79,8 +68,8 @@ void insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
 			adiciona_chave(num_chave, lista_chars);
 		}
 
-	} else {
-			while (aux->prox != NULL){	//enquanto nao chegar no penultipo elemento da lista
+	} else {	//lista com mais de um elemento
+			while (aux->prox != NULL){	//enquanto nao chegar no penultimo elemento da lista
 		if (aux->prox->letra <= letra){		//checa se o prox caractere eh menor ou igual ao que estamos buscando
 			if (aux->prox->letra == letra)		//o caractere ja esta na lista, basta adicionar a chave
 				adiciona_chave(num_chave, aux);
@@ -101,17 +90,22 @@ void insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
 			if (aux->prox->letra == letra)		//o caractere ja esta na lista, basta adicionar a chave
 				adiciona_chave(num_chave, aux);
 			else {					//o caractere nao esta na lista, entao o adiciona
-				adiciona_caracter(letra, lista_chars);
+				struct caractere* novo = aloca_caracter(letra);]
+				novo->prox = aux->prox;
+				aux->prox = novo;
+				
 				adiciona_chave(num_chave, aux);
 			}
-
-			return;
 		}
 		aux = aux->prox;
 	}
 
 	//se chegou aqui, eh pq o caractere eh o ultimo da lista
-	adiciona_caracter(letra, aux);
+	struct caractere* novo = aloca_caracter(letra);]
+	novo->prox = aux->prox;
+	aux->prox = novo;
+	
+	adiciona_chave(num_chave, aux);
 }
 
 int main(){
