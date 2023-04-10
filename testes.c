@@ -3,7 +3,6 @@
 #include  <string.h>
 #include <stdarg.h>
 
-
 //struct que compoe a fila de chaves
 struct chave{
 	int* num_chave;
@@ -47,66 +46,38 @@ void adiciona_chave(int* num_chave, struct caractere* aux){
 void insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
 	struct caractere* aux = lista_chars;
 
-	if (lista_chars == NULL){	//lista vazia, sera o primeiro elemento
+	if (lista_chars == NULL){	//lista vazia, o novo elemento sera o primeiro
 		lista_chars = aloca_caracter(letra);
 		adiciona_chave(num_chave, lista_chars);
 
-	} else if (lista_chars->prox == NULL){	//lista com um elemento
+	} else if (lista_chars->letra >= letra){	//lista com um elemento, verifica se o novo deve ir antes
 
 		if (lista_chars->letra == letra)	//o caractere eh o unico na lista, basta adicionar a chave
 			adiciona_chave(num_chave, lista_chars);
 
-		else if (lista_chars->letra < letra) {		//o caractere deve ser inserido como primeiro da lista
+		else {		//o caractere deve ser inserido como primeiro da lista
 				struct caractere* novo = aloca_caracter(letra);
 
 				novo->prox = lista_chars;
 				lista_chars = novo;
 				adiciona_chave(num_chave, lista_chars);
 
-		} else {	//se nao, adiciona ele no fim
+	} else {
+		while ((aux->prox != NULL) && (aux->prox->letra < letra))	//procura onde o novo elemento deve ser inseridoreturn;
+			aux = aux->prox;
 
-			lista_chars->prox = aloca_caracter(letra);
-			adiciona_chave(num_chave, lista_chars);
+		if ((aux->prox != NULL) && (aux->prox->letra == letra))		//o caractere ja esta na lista, basta adicionar a chave
+			adiciona_chave(num_chave, aux->prox);
+		else {		//o caractere deve ser adicionado
+			struct caractere* novo = aloca_caracter(letra);
+
+			novo->prox = aux->prox;
+			aux->prox = novo;
+			adiciona_chave(num_chave, novo);
 		}
 
-	} else {	//lista com mais de um elemento
-			while (aux->prox != NULL){	//enquanto nao chegar no penultimo elemento da lista
-		if (aux->prox->letra <= letra){		//checa se o prox caractere eh menor ou igual ao que estamos buscando
-			if (aux->prox->letra == letra)		//o caractere ja esta na lista, basta adicionar a chave
-				adiciona_chave(num_chave, aux);
-			else {					//o caractere nao esta na lista, entao o adiciona
-				adiciona_caracter(letra, lista_chars);
-				adiciona_chave(num_chave, aux);
-			}
-
-			return;
-		}
-		aux = aux->prox;
 	}
-
-	}
-
-	while (aux->prox != NULL){	//enquanto nao chegar no penultipo elemento da lista
-		if (aux->prox->letra <= letra){		//checa se o prox caractere eh menor ou igual ao que estamos buscando
-			if (aux->prox->letra == letra)		//o caractere ja esta na lista, basta adicionar a chave
-				adiciona_chave(num_chave, aux);
-			else {					//o caractere nao esta na lista, entao o adiciona
-				struct caractere* novo = aloca_caracter(letra);]
-				novo->prox = aux->prox;
-				aux->prox = novo;
-				
-				adiciona_chave(num_chave, aux);
-			}
-		}
-		aux = aux->prox;
-	}
-
-	//se chegou aqui, eh pq o caractere eh o ultimo da lista
-	struct caractere* novo = aloca_caracter(letra);]
-	novo->prox = aux->prox;
-	aux->prox = novo;
-	
-	adiciona_chave(num_chave, aux);
+}
 }
 
 int main(){
