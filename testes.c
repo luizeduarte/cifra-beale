@@ -5,7 +5,7 @@
 
 //struct que compoe a fila de chaves
 struct chave{
-	int* num_chave;
+	int num_chave;
 	struct chave *prox;
 };
 
@@ -19,7 +19,7 @@ struct caractere{
 
 struct chave* aloca_chave(int* num_chave){
 	struct chave* novo = malloc(sizeof(struct chave));
-	novo->num_chave = num_chave;
+	novo->num_chave = *num_chave;
 	novo->prox = NULL;
 	return novo;
 }
@@ -43,7 +43,7 @@ void adiciona_chave(int* num_chave, struct caractere* aux){
 
 }
 
-void insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
+struct caractere* insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
 	struct caractere* aux = lista_chars;
 
 	if (lista_chars == NULL){	//lista vazia, o novo elemento sera o primeiro
@@ -61,7 +61,7 @@ void insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
 				novo->prox = lista_chars;
 				lista_chars = novo;
 				adiciona_chave(num_chave, lista_chars);
-
+		}
 	} else {
 		while ((aux->prox != NULL) && (aux->prox->letra < letra))	//procura onde o novo elemento deve ser inseridoreturn;
 			aux = aux->prox;
@@ -77,12 +77,34 @@ void insere_lista(struct caractere* lista_chars, int* num_chave, char letra){
 		}
 
 	}
+	return lista_chars;
 }
+
+void imprime_lista(struct caractere* lista_chars){
+	struct caractere* aux = lista_chars;
+	struct chave* aux_chave;
+
+	while (aux != NULL){
+		printf("%c: ", aux->letra);
+		aux_chave = aux->lista_chaves;
+		while (aux_chave != NULL){
+			printf("%d ", aux_chave->num_chave);
+			aux_chave = aux_chave->prox;
+		}
+		printf("\n");
+		aux = aux->prox;
+	}
 }
 
 int main(){
 	struct caractere* lista_chars = NULL;
-	int num_chave;
+	int num_chave = 0;
 
-	insere_lista(lista_chars, &num_chave, 'a');
+	lista_chars = insere_lista(lista_chars, &num_chave, 'a');
+	lista_chars = insere_lista(lista_chars, &num_chave, 'b');
+	lista_chars = insere_lista(lista_chars, &num_chave, 'c');
+	lista_chars = insere_lista(lista_chars, &num_chave, 'a');
+	lista_chars = insere_lista(lista_chars, &num_chave, 'b');
+
+	imprime_lista(lista_chars);
 }
