@@ -6,15 +6,9 @@
 #include <getopt.h>
 
 int main(int argc, char *argv[]) {
-	int opt;
-	int flag_codificar = 0;
-	int flag_decodificar = 0;
-	char *livro_cifra = NULL;
-	char *mensagem_original = NULL;
-	char *mensagem_codificada = NULL;
-	char *arquivo_chaves = NULL;
-	char *mensagem_decodificada = NULL;
-	char *opcoes = "e:d:b:m:o:c:i:";
+	int opt, flag_codificar = 0, flag_decodificar = 0;
+	char* livro_cifra = NULL, mensagem_original = NULL, mensagem_codificada = NULL, arquivo_chaves = NULL, mensagem_decodificada = NULL, 
+	opcoes = "e:d:b:m:o:c:i:";
 	struct caractere* lista_chars = NULL;
 	int num_chave = 0;
 
@@ -57,25 +51,28 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-		//abre o arquivo do livro cifra para leitura
+		//abre os arquivos necessarios
 		FILE* f_livro = fopen(livro_cifra, "r");		
-		//abre o arquivo da mensagem original para leitura
 		FILE* f_mensagem_original = fopen(mensagem_original, "r");
-		//abre o arquivo da mensagem codificada para escrita
 		FILE* f_mensagem_codificada = fopen(mensagem_codificada, "w");	//modo de escrita apaga o que o arquivo possuia
-		//abre o arquivo de chaves para escrita
-		FILE* f_chaves = fopen(arquivo_chaves, "w");	//modo de escrita apaga o que o arquivo possuia
+		FILE* f_chaves = fopen(arquivo_chaves, "w");
 
 		//verifica se nao houve erro ao abrir os arquivos
-		verifica_arquivos(4, f_livro, f_mensagem_original, f_mensagem_codificada, f_chaves);
+		if ((f_livro == NULL) || (f_mensagem_original == NULL) || (f_mensagem_codificada == NULL) || (f_chaves == NULL)){
+			printf("erro ao abrir os arquivos");
+			return 1;
+		}
 
+		lista_chars = gera_lista_chaves(lista_chars, f_livro);	//gera a lista de chaves a partir do livro cifra
 		codifica(lista_chars, f_mensagem_original, f_mensagem_codificada);
 		cria_arq_chaves(lista_chars, f_chaves);
 		
+		//fecha os arquivos abertos
 		fclose(f_chaves);
 		fclose(f_mensagem_codificada);
 		fclose(f_livro);
 		fclose(f_mensagem_original);
+		return 0;
 	}
 
 	//DECODIFICAR
@@ -86,19 +83,20 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-		//abre o arquivo da mensagem codificada para leitura
+		//abre os arquivos
 		FILE* f_mensagem_codificada = fopen(mensagem_codificada, "r");
-		//abre o arquivo da mensagem decodificada para escrita
 		FILE* f_mensagem_decodificada = fopen(mensagem_decodificada, "w");
+		//verifica se houve algum erro
+		if ((f_mensagem_codificada ==	 NULL) || (f_mensagem_decodificada == NULL))
+			printf("erro ao abrir os arquivos");
 
 		//verifica qual tipo de decodificacao sera feita, usando o livro cifra ou o arquivo de chaves
 		if (livro_cifra != NULL){
 
 			//abre o arquivo do livro cifra para leitura
 			FILE* f_livro = fopen(livro_cifra, "r");
-
-
-			verifica_arquivos(3, f_livro, f_mensagem_codificada, f_mensagem_decodificada);
+			if ((f_livro == NULL))
+				printf("erro ao abrir o livro de cifra");
 
 			gera_lista_chaves(lista_chars, f_livro);
 			decodifica(lista_chars, f_mensagem_codificada, f_mensagem_decodificada);
@@ -109,8 +107,8 @@ int main(int argc, char *argv[]) {
 
 			//abre o arquivo de chaves para leitura
 			FILE* f_chaves = fopen(arquivo_chaves, "r");
-
-			verifica_arquivos(3, f_chaves, f_mensagem_codificada, f_mensagem_decodificada);
+			if (f_chaves == NULL)
+				printf("erro ao abrir o arquivo de chaves");
 
 			decodifica(lista_chars, f_mensagem_codificada, f_mensagem_decodificada);
 
