@@ -6,7 +6,7 @@
 #include <getopt.h>
 
 int main(int argc, char *argv[]) {
-	int opt, flag_codificar = 0, flag_decodificar = 0;
+	int opt, flag_codificar = 0, flag_decodificar = 0, flag_arq_chaves = 0;
 	char* livro_cifra = NULL, mensagem_original = NULL, mensagem_codificada = NULL, arquivo_chaves = NULL, mensagem_decodificada = NULL, 
 	opcoes = "e:d:b:m:o:c:i:";
 	struct caractere* lista_chars = NULL;
@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'c':
 				arquivo_chaves = optarg;
+				flag_arq_chaves = 1;
 				break;
 			case 'i':
 				mensagem_decodificada = optarg;
@@ -46,7 +47,7 @@ int main(int argc, char *argv[]) {
 	//CODIFICAR
 	if (flag_codificar == 1) {
 		//checa se passou todos os argumentos necessarios
-		if ((livro_cifra == NULL) || (mensagem_original == NULL) || (mensagem_codificada == NULL) || (arquivo_chaves == NULL)) {
+		if ((livro_cifra == NULL) || (mensagem_original == NULL) || (mensagem_codificada == NULL)) {
 			printf("tenha certeza de inserir todas as opcoes.\n");
 			return 1;
 		}
@@ -55,23 +56,32 @@ int main(int argc, char *argv[]) {
 		FILE* f_livro = fopen(livro_cifra, "r");		
 		FILE* f_mensagem_original = fopen(mensagem_original, "r");
 		FILE* f_mensagem_codificada = fopen(mensagem_codificada, "w");	//modo de escrita apaga o que o arquivo possuia
-		FILE* f_chaves = fopen(arquivo_chaves, "w");
 
 		//verifica se nao houve erro ao abrir os arquivos
-		if ((f_livro == NULL) || (f_mensagem_original == NULL) || (f_mensagem_codificada == NULL) || (f_chaves == NULL)){
+		if ((f_livro == NULL) || (f_mensagem_original == NULL) || (f_mensagem_codificada == NULL)){
 			printf("erro ao abrir os arquivos");
 			return 1;
 		}
 
 		lista_chars = gera_lista_chaves(lista_chars, f_livro);	//gera a lista de chaves a partir do livro cifra
 		codifica(lista_chars, f_mensagem_original, f_mensagem_codificada);
-		cria_arq_chaves(lista_chars, f_chaves);
 		
 		//fecha os arquivos abertos
-		fclose(f_chaves);
 		fclose(f_mensagem_codificada);
 		fclose(f_livro);
 		fclose(f_mensagem_original);
+		
+		if (flag_arq_chaves == 1){	//se quiser criar um arquivo de chaves
+			FILE* f_chaves = fopen(arquivo_chaves, "w");
+			
+			if (f_chaves == NULL)	//verifica se nao houve erro
+				printf("erro ao abrir o arquivo de chaves");
+			
+			cria_arq_chaves(lista_chars, f_chaves);
+			
+			fclose*(f_chaves);
+		}
+		
 		return 0;
 	}
 
