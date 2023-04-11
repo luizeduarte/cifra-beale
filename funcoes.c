@@ -141,7 +141,7 @@ void codifica(struct caractere* lista_chars, FILE* f_mensagem_original, FILE* f_
 void decodifica(struct caractere* lista_chars, FILE* f_mensagem_codificada, FILE* f_mensagem_decodificada){
 	int numero;
 
-	while (fscanf(f_mensagem_codificada, "%d", &numero) != EOF){
+	while (fscanf(f_mensagem_codificada, "%d", &numero) != EOF){	//enquanto nao chegar ao fim do arquivo,le um numero
 		if (numero == -1) 	//se for -1, eh um espaco
 			fprintf(f_mensagem_decodificada, " ");
 		else { 
@@ -154,7 +154,7 @@ void decodifica(struct caractere* lista_chars, FILE* f_mensagem_codificada, FILE
 				aux2 = aux1->lista_chaves;
 
 				while ((aux2 != NULL) && (achou != 1)){		//procura na lista de chaves
-					if (aux2->num_chave == numero);{
+					if (aux2->num_chave == numero){
 						fprintf(f_mensagem_decodificada, "%c", aux1->letra);
 						achou = 1;
 					}
@@ -163,21 +163,6 @@ void decodifica(struct caractere* lista_chars, FILE* f_mensagem_codificada, FILE
 				aux1 = aux1->prox;
 			}
 		}
-	}
-}
-
-void desaloca_lista(struct caractere* lista_chars){
-	struct caractere* aux = lista_chars;
-	while (aux != NULL){
-		while (aux->lista_chaves != NULL){
-			struct chave* temp = aux->lista_chaves->prox;
-			free(aux->lista_chaves);
-			aux->lista_chaves = temp;
-		}
-
-		struct caractere* temp = aux->prox;
-		free(aux);
-		aux = temp;
 	}
 }
 
@@ -193,6 +178,23 @@ void cria_arq_chaves(struct caractere* lista_chars, FILE* f_chaves){
 		}
 
 		fprintf(f_chaves, "\n");
+		lista_chars = lista_chars->prox;
+	}
+	return;
+}
+
+void desaloca_lista(struct caractere* lista_chars){
+	struct caractere* aux = lista_chars;
+	while (aux != NULL){
+		while (aux->lista_chaves != NULL){
+			struct chave* temp = aux->lista_chaves->prox;
+			free(aux->lista_chaves);
+			aux->lista_chaves = temp;
+		}
+
+		struct caractere* temp = aux->prox;
+		free(aux);
+		aux = temp;
 	}
 }
 
