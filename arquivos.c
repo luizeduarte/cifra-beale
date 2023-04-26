@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
 		//abre os arquivos
 		FILE* f_mensagem_codificada = fopen(mensagem_codificada, "r");
 		FILE* f_mensagem_decodificada = fopen(mensagem_decodificada, "w");
+
 		//verifica se houve algum erro
 		if ((f_mensagem_codificada == NULL) || (f_mensagem_decodificada == NULL))
 			printf("erro ao abrir os arquivos");
@@ -127,5 +128,4 @@ int main(int argc, char *argv[]) {
 		fclose(f_mensagem_decodificada);
 		fclose(f_mensagem_codificada);
 	}
-
 }

@@ -25,7 +25,7 @@ struct chave* aloca_chave(int num_chave){
 	return novo;
 }
 
-struct caractere* aloca_caracter(char letra){
+struct caractere* aloca_caractere(char letra){
 	struct caractere* novo = malloc(sizeof(struct caractere));
 	novo->letra = letra;
 	novo->tamanho = 0;
@@ -36,7 +36,7 @@ struct caractere* aloca_caracter(char letra){
 
 void adiciona_chave(int num_chave, struct caractere* aux){
 	struct chave* novo = aloca_chave(num_chave);
-	aux->tamanho++;
+	aux->tamanho++;		//cada elemento da lista de chars guarda o tamanho da lista de chaves ligada a ela
 	novo->prox = aux->chaves_head;		//adiciona a chave no comeco
 	aux->chaves_head = novo;
 }
@@ -44,7 +44,7 @@ void adiciona_chave(int num_chave, struct caractere* aux){
 struct caractere* insere_lista(struct caractere* chars_head, int num_chave, char letra){
 
 	if (chars_head == NULL){	//lista vazia, o novo elemento sera o primeiro
-		chars_head = aloca_caracter(letra);
+		chars_head = aloca_caractere(letra);
 		adiciona_chave(num_chave, chars_head);
 
 	} else if (chars_head->letra >= letra){	//lista com um elemento, verifica se o novo deve ir antes
@@ -53,7 +53,7 @@ struct caractere* insere_lista(struct caractere* chars_head, int num_chave, char
 			adiciona_chave(num_chave, chars_head);
 
 		else {		//o caractere deve ser inserido como primeiro da lista
-				struct caractere* novo = aloca_caracter(letra);
+				struct caractere* novo = aloca_caractere(letra);
 
 				novo->prox = chars_head;
 				chars_head = novo;
@@ -61,13 +61,14 @@ struct caractere* insere_lista(struct caractere* chars_head, int num_chave, char
 		}
 	} else {
 		struct caractere* aux = chars_head;
+
 		while ((aux->prox != NULL) && (aux->prox->letra < letra))	//procura onde o novo elemento deve ser inserido
 			aux = aux->prox;
 
 		if ((aux->prox != NULL) && (aux->prox->letra == letra))		//o caractere ja esta na lista, basta adicionar a chave
 			adiciona_chave(num_chave, aux->prox);
 		else {		//o caractere deve ser adicionado
-			struct caractere* novo = aloca_caracter(letra);
+			struct caractere* novo = aloca_caractere(letra);
 
 			novo->prox = aux->prox;
 			aux->prox = novo;
@@ -75,26 +76,12 @@ struct caractere* insere_lista(struct caractere* chars_head, int num_chave, char
 		}
 
 	}
+
 	return chars_head;
 }
 
-void imprime_lista(struct caractere* chars_head){
-	struct caractere* aux = chars_head;
-	struct chave* aux_chave;
-
-	while (aux != NULL){
-		printf("%c: ", aux->letra);
-		aux_chave = aux->chaves_head;
-		while (aux_chave != NULL){
-			printf("%d ", aux_chave->num_chave);
-			aux_chave = aux_chave->prox;
-		}
-		printf("\n");
-		aux = aux->prox;
-	}
-}
-
 struct caractere* gera_lista(struct caractere* chars_head, FILE* f_livro){
+	//gera a lista de chaves a partir do livro cifra
 	int num_chave = 0;
 	char palavra[30];
 
@@ -127,6 +114,26 @@ int seleciona_chaves(struct caractere* chars_head, char letra){
 	return -2;
 }
 
+char seleciona_letra(struct caractere* chars_head, int numero){
+	//seleciona a letra que corresponde a chave
+	struct caractere* aux1 = chars_head;
+	struct chave* aux2;
+
+	while ((aux1 != NULL)){		//procura na lista de caracteres
+		aux2 = aux1->chaves_head;
+
+		while ((aux2 != NULL)){		//procura na lista de chaves
+			if (aux2->num_chave == numero){
+				return aux1->letra;
+			}
+
+			aux2 = aux2->prox;
+		}
+
+		aux1 = aux1->prox;
+	}
+}
+
 //FUNCOES DE CODIFICAR E DECODIFICAR
 void codifica(struct caractere* chars_head, FILE* f_mensagem_original, FILE* f_mensagem_codificada){
 	char c;
@@ -139,7 +146,7 @@ void codifica(struct caractere* chars_head, FILE* f_mensagem_original, FILE* f_m
 }
 
 void decodifica(struct caractere* chars_head, FILE* f_mensagem_codificada, FILE* f_mensagem_decodificada){
-	int numero;
+	int numero, letra;
 
 	while (fscanf(f_mensagem_codificada, "%d", &numero) != EOF){	//enquanto nao chegar ao fim do arquivo,le um numero
 		if (numero == -1) 	//se for -1, eh um espaco
@@ -149,28 +156,14 @@ void decodifica(struct caractere* chars_head, FILE* f_mensagem_codificada, FILE*
 			fprintf(f_mensagem_decodificada, "?");
 
 		else { 
-			//procura a letra que corresponde a chave
-			struct caractere* aux1 = chars_head;
-			struct chave* aux2;
-
-			int achou = 0;
-			while ((aux1 != NULL) && (achou != 1)){		//procura na lista de caracteres
-				aux2 = aux1->chaves_head;
-
-				while ((aux2 != NULL) && (achou != 1)){		//procura na lista de chaves
-					if (aux2->num_chave == numero){
-						fprintf(f_mensagem_decodificada, "%c", aux1->letra);
-						achou = 1;
-					}
-					aux2 = aux2->prox;
-				}
-				aux1 = aux1->prox;
-			}
+			letra = seleciona_letra(chars_head, numero);	//seleciona a letra que corresponde a chave
+			fprintf(f_mensagem_decodificada, "%c", letra);
 		}
 	}
 }
 
 void cria_arq_chaves(struct caractere* chars_head, FILE* f_chaves){
+	//cria um arquivo com as listas de chaves
 	
 	while (chars_head != NULL){
 		fprintf(f_chaves, "%c: ", chars_head->letra);
@@ -184,6 +177,7 @@ void cria_arq_chaves(struct caractere* chars_head, FILE* f_chaves){
 		fprintf(f_chaves, "\n");
 		chars_head = chars_head->prox;
 	}
+
 	return;
 }
 
