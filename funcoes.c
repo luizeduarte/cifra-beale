@@ -78,8 +78,6 @@ struct nodo_caractere* insere_lista(struct nodo_caractere* chars_head, int num_c
 		}
 
 	}
-	return chars_head;
-}
 
 int seleciona_chaves(struct nodo_caractere* chars_head, char caractere){
 	//seleciona uma chave que corresponde a caractere do texto
@@ -223,6 +221,7 @@ void cria_arq_chaves(struct nodo_caractere* chars_head, FILE* f_chaves){
 		fprintf(f_chaves, "\n");
 		chars_head = chars_head->prox;
 	}
+
 	return;
 }
 
@@ -257,5 +256,4 @@ FILE* abre_escrita(char* arquivo){
 		}else 
 			return f_arquivo;	
 	}
-
 }

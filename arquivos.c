@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 			//abre o arquivo do livro cifra para leitura
 			FILE* f_livro = abre_leitura(livro_cifra);
 
-			gera_lista(chars_head, f_livro);
+			gera_lista(chars_head, f_livro);	//gera as listas a partir do livro cifra
 			decodifica(chars_head, f_mensagem_codificada, f_mensagem_decodificada);
 
 			fclose(f_livro);
