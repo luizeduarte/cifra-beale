@@ -1,3 +1,9 @@
+#ifndef MANIPULA_LISTA_H_
+#define MANIPULA_LISTA_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define CARACTERE_FALTANDO -3
 #define MAX_STRING 100
 
 //struct que compoe a fila de chaves
@@ -22,13 +28,8 @@ struct nodo_caractere* insere_lista(struct nodo_caractere* chars_head, int num_c
 int seleciona_chaves(struct nodo_caractere* chars_head, char caractere);
 char seleciona_caractere(struct nodo_caractere* chars_head, int chave);
 void desaloca_lista(struct nodo_caractere* chars_head);
+
 //FUNCOES DE TRANSFORMAR ARQUIVOS EM LISTAS
-struct nodo_caractere* gera_lista_livro(struct nodo_caractere* chars_head, FILE* f_livro);
+struct nodo_caractere* gera_lista_livro(FILE* f_livro);
 struct nodo_caractere* gera_lista_arqchaves(FILE* f_chaves);
-//FUNCOES QUE CRIAM ARQUIVOS
-void codifica(struct nodo_caractere* chars_head, FILE* f_mensagem_original, FILE* f_mensagem_codificada);
-void decodifica(struct nodo_caractere* chars_head, FILE* f_mensagem_codificada, FILE* f_mensagem_decodificada);
-void cria_arq_chaves(struct nodo_caractere* chars_head, FILE* f_chaves);
-//FUNCOES PARA OS ARQUIVOS
-FILE* abre_leitura(char* arquivo);
-FILE* abre_escrita(char* arquivo)
+#endif
