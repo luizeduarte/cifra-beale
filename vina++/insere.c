@@ -37,33 +37,41 @@ void insere_archive(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct di
 	fwrite(&tam_conteudo, sizeof(long long int), 1, archive);
 
 	//posiciona o ponteiro no fim dos conteudos
-	fseek(archive, (tam_conteudo + sizeof(long long int) + sizeof(int)), SEEK_SET);
+	fseek(archive, (tam_conteudo + sizeof(long long int) + sizeof(int) - info_arquivo.st_size), SEEK_SET);
 	//calcula o numeros de blocos a serem lidos
-	int num_blocos = info_arquivo.st_size/ 1024;
-	int resto = info_arquivo.st_size % 1024;
-
+	long long int num_blocos = info_arquivo.st_size/ 1024;
+	long long int resto = info_arquivo.st_size % 1024;
+ 
 	//copia do novo arquivo para o archive
-	for (int i = 0; i < num_blocos; i++){
-		fread(&buffer, sizeof(char), 1024, arq_novo);
-		fwrite(&buffer, sizeof(char), 1024, archive);
+	for (long long int i = 0; i < num_blocos; i++){
+		fread(buffer, sizeof(char), 1024, arq_novo);
+		fwrite(buffer, sizeof(char), 1024, archive);
 	}
-	fread(&buffer, sizeof(char), resto, arq_novo);
-	fwrite(&buffer, sizeof(char), resto, archive);
+	fread(buffer, sizeof(char), resto, arq_novo);
+	fwrite(buffer, sizeof(char), resto, archive);
 
 	//atualiza o diretorio
-	v_diretorio = realloc(v_diretorio, num_arquivos*sizeof(struct diretorio*));
+	v_diretorio = malloc(num_arquivos*sizeof(struct diretorio*));
+	v_diretorio[num_arquivos - 1] = malloc(sizeof(struct diretorio));
 
-	v_diretorio[num_arquivos - 1]->nome = malloc(sizeof(char) * strlen(nome_arquivo));
 	v_diretorio[num_arquivos - 1]->nome = nome_arquivo;
 	v_diretorio[num_arquivos - 1]->tamanho = info_arquivo.st_size;
-	v_diretorio[num_arquivos - 1]->posicao = tam_conteudo + sizeof(long long int) + sizeof(int);
+	v_diretorio[num_arquivos - 1]->posicao = tam_conteudo + sizeof(long long int) + sizeof(int) - info_arquivo.st_size;
 	v_diretorio[num_arquivos - 1]->uid = info_arquivo.st_uid;
 	v_diretorio[num_arquivos - 1]->permissoes = info_arquivo.st_mode;
 	v_diretorio[num_arquivos - 1]->ultima_modificacao = info_arquivo.st_mtime;
 
+	int tam_nome; 
 	//agora, é preciso imprimir o diretório no fim do arquivo
 	for (int i = 0; i < num_arquivos; i++){
-		fwrite(v_diretorio[i], sizeof(struct diretorio), 1, archive);
+		tam_nome = strlen(v_diretorio[i]->nome);
+		fwrite(&tam_nome, sizeof(int), 1, archive);
+		fwrite(v_diretorio[i]->nome, sizeof(char), tam_nome , archive);
+		fwrite(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);
+		fwrite(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);
+		fwrite(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);
+		fwrite(&v_diretorio[i]->permissoes, sizeof(mode_t), 1, archive);
+		fwrite(&v_diretorio[i]->ultima_modificacao, sizeof(time_t), 1, archive);
 	}
 }
 

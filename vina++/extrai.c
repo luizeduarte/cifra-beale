@@ -22,14 +22,15 @@ struct diretorio** le_diretorio(FILE* archive){
 	struct diretorio* *v_diretorio;
 
 	fread(&num_arquivos, sizeof(int), 1, archive);		//le o numero de arquivos
-	v_diretorio = malloc(num_arquivos * sizeof(struct diretorio));
+	v_diretorio = malloc(num_arquivos * sizeof(struct diretorio*));
 	fread(&tamanho, sizeof(long long int), 1, archive);		//le o tamanho dos conteudos
 	fseek(archive, (tamanho + sizeof(long long int) + sizeof(int)), SEEK_SET);	//vai para o diretorio
 
 	for (int i = 0; i < num_arquivos; i++){
-		fread(&tam_nome, sizeof(long long int), 1, archive);	//le o tamanho do nome do arquivo
+		v_diretorio[i] = malloc(sizeof(struct diretorio));
+		fread(&tam_nome, sizeof(int), 1, archive);	//le o tamanho do nome do arquivo
 		v_diretorio[i]->nome = malloc(tam_nome * sizeof(char));
-		fread(&v_diretorio[i]->nome, sizeof(char), tam_nome, archive);
+		fread(v_diretorio[i]->nome, sizeof(char), tam_nome, archive);
 		fread(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);	//le o tamanho do arquivo
 		fread(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);	//le a posicao do arquivo
 		fread(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);	//le o uid do arquivo
@@ -45,17 +46,17 @@ int info_arquivo(FILE* archive, char* nome_arquivo, struct diretorio* v_diretori
 
 	int achou = 0, num_arquivos;
 
+	fseek(archive, 0, SEEK_SET);
 	fread(&num_arquivos, sizeof(int), 1, archive);		//le o numero de arquivos
-	num_arquivos--;
-	while ((!achou) && (num_arquivos >= 0)){
-		if (strcmp(v_diretorio[num_arquivos]->nome, nome_arquivo)){
+	while ((achou == 0) && (num_arquivos > 0)){
+		if (strcmp(v_diretorio[num_arquivos - 1]->nome, nome_arquivo) == 0){
 			achou = 1;
 		}
 
 		num_arquivos--;
 	}
 
-	if (!achou)
+	if (achou == 0)
 		return -1;
 
 	return num_arquivos;
@@ -72,25 +73,25 @@ void extrai(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
 	}
 
 	FILE* novo_arquivo = fopen(nome_arquivo, "wb");
-	fseek(archive, v_diretorio[arquivo]->posicao, SEEK_SET);
 
 	//calcula o numeros de blocos a serem lidos
-	int num_blocos = v_diretorio[arquivo]->tamanho / 1024;
+	long long int num_blocos = v_diretorio[arquivo]->tamanho / 1024;
 	int resto = v_diretorio[arquivo]->tamanho % 1024;
 
+	fseek(archive, v_diretorio[arquivo]->posicao, SEEK_SET);
 	//copia do archive para o novo arquivo
 	for (int i = 0; i < num_blocos; i++){
-		fread(&buffer, sizeof(char), 1024, archive);
-		fwrite(&buffer, sizeof(char), 1024, novo_arquivo);
+		fread(buffer, sizeof(char), 1024, archive);
+		fwrite(buffer, sizeof(char), 1024, novo_arquivo);
 	}
-	fread(&buffer, sizeof(char), resto, archive);
-	fwrite(&buffer, sizeof(char), resto, novo_arquivo);
+	fread(buffer, sizeof(char), resto, archive);
+	fwrite(buffer, sizeof(char), resto, novo_arquivo);
 
 	fclose(novo_arquivo);
 }
 
 int main(){
-	FILE* archive = fopen("teste.txt", "rb");
+	FILE* archive = fopen("archive.bin", "rb");
 	struct diretorio* *v_diretorio = le_diretorio(archive);
 	extrai(archive, "teste.txt", v_diretorio);
 	return 0;
