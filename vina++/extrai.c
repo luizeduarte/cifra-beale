@@ -66,13 +66,13 @@ void extrai(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
 	int arquivo;
 	char* buffer = malloc(sizeof(char) * 1024);
 
+	FILE* novo_arquivo = fopen(nome_arquivo, "w");
+
 	arquivo = info_arquivo(archive, nome_arquivo, v_diretorio);
 	if (arquivo < 0){
 		fprintf(stderr, "Arquivo nao encontrado\n");
 		return;
 	}
-
-	FILE* novo_arquivo = fopen(nome_arquivo, "wb");
 
 	//calcula o numeros de blocos a serem lidos
 	long long int num_blocos = v_diretorio[arquivo]->tamanho / 1024;

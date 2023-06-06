@@ -13,6 +13,30 @@ struct diretorio{
 	time_t ultima_modificacao;
 };
 
+/*struct diretorio** le_diretorio(FILE* archive){
+	int num_arquivos, tam_nome, tamanho;
+	struct diretorio* *v_diretorio;
+
+	fread(&num_arquivos, sizeof(int), 1, archive);		//le o numero de arquivos
+	v_diretorio = malloc(num_arquivos * sizeof(struct diretorio*));
+	fread(&tamanho, sizeof(long long int), 1, archive);		//le o tamanho dos conteudos
+	fseek(archive, (tamanho + sizeof(long long int) + sizeof(int)), SEEK_SET);	//vai para o diretorio
+
+	for (int i = 0; i < num_arquivos; i++){
+		v_diretorio[i] = malloc(sizeof(struct diretorio));
+		fread(&tam_nome, sizeof(int), 1, archive);	//le o tamanho do nome do arquivo
+		v_diretorio[i]->nome = malloc(tam_nome * sizeof(char));
+		fread(v_diretorio[i]->nome, sizeof(char), tam_nome, archive);
+		fread(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);	//le o tamanho do arquivo
+		fread(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);	//le a posicao do arquivo
+		fread(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);	//le o uid do arquivo
+		fread(&v_diretorio[i]->permissoes, sizeof(mode_t), 1, archive);	//le as permissoes do arquivo
+		fread(&v_diretorio[i]->ultima_modificacao, sizeof(time_t), 1, archive);	//le a ultima modificacao do arquivo
+	}
+
+	return v_diretorio;
+}*/
+
 void insere_archive(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio* v_diretorio[]){
 	unsigned int num_arquivos;
 	long long int tam_conteudo;
@@ -77,7 +101,7 @@ void insere_archive(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct di
 
 int main(){
 	FILE* archive = fopen("archive.bin", "wb");
-	FILE* arq_novo = fopen("teste.txt", "rb");
+	FILE* arq_novo = fopen("teste.txt", "r");
 	struct diretorio* *v_diretorio = NULL;
 
 	insere_archive("teste.txt", arq_novo, archive, v_diretorio);

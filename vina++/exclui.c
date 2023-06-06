@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct diretorio{
 	char* nome;
@@ -59,7 +60,7 @@ int info_arquivo(FILE* archive, char* nome_arquivo, struct diretorio* v_diretori
 
 void exclui(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
 	int arquivo, num_arquivos;
-	long long int diretorio_pos, tam_conteudo;
+	long long int tam_conteudo, diretorio_pos;
 	char* buffer = malloc(sizeof(char) * 1024), tam_nome;
 	arquivo = info_arquivo(archive, nome_arquivo, v_diretorio);
 
@@ -70,13 +71,19 @@ void exclui(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
 		return;
 	}
 	fread(&tam_conteudo, sizeof(long long int), 1, archive);
-	diretorio_pos = tam_conteudo + sizeof(long long int) + sizeof(int);
+	diretorio_pos = sizeof(long long int) + sizeof(int) + tam_conteudo; 
 	fseek(archive, 0, SEEK_SET);
 
 	//atualiza o numero de arquivos
 	num_arquivos--;
-	fwrite(&num_arquivos, sizeof(int), 1, archive);
+
+	if (num_arquivos == 0){
+		ftruncate(fileno(archive), 0);
+		return;
+	}
+
 	tam_conteudo -= v_diretorio[arquivo]->tamanho;
+	fwrite(&num_arquivos, sizeof(int), 1, archive);	
 	fwrite(&tam_conteudo, sizeof(long long int), 1, archive);
 
 	if (arquivo < 0){
@@ -86,10 +93,11 @@ void exclui(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
 
 	long long int nova_pos = v_diretorio[arquivo]->posicao;
 	long long int antiga_pos = nova_pos + v_diretorio[arquivo]->tamanho;
+	long long int tam_mover = diretorio_pos - antiga_pos;
 
 	//calcula o carregamento em blocos 
-	long long int num_blocos = v_diretorio[arquivo]->tamanho / 1024;
-	long long int resto = v_diretorio[arquivo]->tamanho % 1024;
+	long long int num_blocos = tam_mover / 1024;
+	long long int resto = tam_mover % 1024;
 
 	//copia os blocos para a nova posicao no archive 
 	for (int i = 0; i < num_blocos; i++){
@@ -110,16 +118,20 @@ void exclui(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
 	//atualiza o diretorio
 	for (int i = 0; i < num_arquivos; i++){
 		if (i != arquivo){
-		tam_nome = strlen(v_diretorio[i]->nome);
-		fwrite(&tam_nome, sizeof(int), 1, archive);
-		fwrite(v_diretorio[i]->nome, sizeof(char), tam_nome , archive);
-		fwrite(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);
-		fwrite(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);
-		fwrite(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);
-		fwrite(&v_diretorio[i]->permissoes, sizeof(mode_t), 1, archive);
-		fwrite(&v_diretorio[i]->ultima_modificacao, sizeof(time_t), 1, archive);
+			tam_nome = strlen(v_diretorio[i]->nome);
+			fwrite(&tam_nome, sizeof(int), 1, archive);
+			fwrite(v_diretorio[i]->nome, sizeof(char), tam_nome , archive);
+			fwrite(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);
+			fwrite(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);
+			fwrite(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);
+			fwrite(&v_diretorio[i]->permissoes, sizeof(mode_t), 1, archive);
+			fwrite(&v_diretorio[i]->ultima_modificacao, sizeof(time_t), 1, archive);
 		}
 	}
+
+	long long int tam_archive = ftell(archive);
+	//cortar archive
+	ftruncate(fileno(archive), tam_archive);
 }
 
 int main(){
