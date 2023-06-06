@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#define MAX_STRING 1024
 
 struct diretorio{
 	char* nome;
@@ -13,20 +14,27 @@ struct diretorio{
 	time_t ultima_modificacao;
 };
 
+struct conteudo{
+	unsigned int num_arq;
+	long long int tam_conteudo, diretorio_pos;
+};
+
 struct diretorio** le_diretorio(FILE* archive){
-	int num_arquivos, tam_nome, tamanho;
+	struct conteudo info_conteudo;
 	struct diretorio* *v_diretorio;
 
-	fread(&num_arquivos, sizeof(int), 1, archive);		//le o numero de arquivos
-	v_diretorio = malloc(num_arquivos * sizeof(struct diretorio*));
-	fread(&tamanho, sizeof(long long int), 1, archive);		//le o tamanho dos conteudos
-	fseek(archive, (tamanho + sizeof(long long int) + sizeof(int)), SEEK_SET);	//vai para o diretorio
+	fread(&info_conteudo.num_arq, sizeof(int), 1, archive);		//le o numero de arquivos
+	v_diretorio = malloc(info_conteudo.num_arq * sizeof(struct diretorio*));
+	fread(&info_conteudo.tam_conteudo, sizeof(long long int), 1, archive);		//le o tamanho dos conteudos
+	info_conteudo.diretorio_pos = info_conteudo.tam_conteudo + sizeof(long long int) + sizeof(int);	//guarda a posicao do diretorio
+	
+	fseek(archive, info_conteudo.diretorio_pos, SEEK_SET);	//vai para o diretorio
 
-	for (int i = 0; i < num_arquivos; i++){
+	for (int i = 0; i < info_conteudo.num_arq; i++){
 		v_diretorio[i] = malloc(sizeof(struct diretorio));
-		fread(&tam_nome, sizeof(int), 1, archive);	//le o tamanho do nome do arquivo
-		v_diretorio[i]->nome = malloc(tam_nome * sizeof(char));
-		fread(v_diretorio[i]->nome, sizeof(char), tam_nome, archive);
+		fread(&v_diretorio[i]->tam_nome, sizeof(int), 1, archive);	//le o tamanho do nome do arquivo
+		v_diretorio[i]->nome = malloc(v_diretorio[i]->tam_nome * sizeof(char));
+		fread(v_diretorio[i]->nome, sizeof(char), v_diretorio[i]->tam_nome, archive);
 		fread(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);	//le o tamanho do arquivo
 		fread(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);	//le a posicao do arquivo
 		fread(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);	//le o uid do arquivo
@@ -37,76 +45,81 @@ struct diretorio** le_diretorio(FILE* archive){
 	return v_diretorio;
 }
 
-int info_arquivo(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
-	//recebe o nome de um arquivo e retorna o indice dele no vetor diretorio
+int id_arquivo(FILE *archive, char *nome_arquivo, struct diretorio *v_diretorio[]){
+	//recebe o archive e o nome de um arquivo, retornando o indice dele no vetor diretorio
 
-	int achou = 0, num_arquivos;
+	int achou = 0, info_conteudo.num_arq;
 
 	fseek(archive, 0, SEEK_SET);
-	fread(&num_arquivos, sizeof(int), 1, archive);		//le o numero de arquivos
-	while ((achou == 0) && (num_arquivos > 0)){
-		if (strcmp(v_diretorio[num_arquivos - 1]->nome, nome_arquivo) == 0){
+	fread(&info_conteudo.num_arq, sizeof(int), 1, archive);		//le o numero de arquivos
+	while ((achou == 0) && (info_conteudo.num_arq > 0)){
+		if (strcmp(v_diretorio[info_conteudo.num_arq - 1]->nome, nome_arquivo) == 0){
 			achou = 1;
 		}
 
-		num_arquivos--;
+		info_conteudo.num_arq--;
 	}
 
 	if (achou == 0)
 		return -1;
 
-	return num_arquivos;
+	return info_conteudo.num_arq;
 }
 
-void exclui(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
-	int arquivo, num_arquivos;
-	long long int tam_conteudo, diretorio_pos;
-	char* buffer = malloc(sizeof(char) * 1024), tam_nome;
-	arquivo = info_arquivo(archive, nome_arquivo, v_diretorio);
+struct conteudo sub_info_conteudos(FILE* archive, struct diretorio* v_diretorio[]){
+	struct conteudo info_conteudo;
 
-	//guarda onde começa o diretório
 	fseek(archive, 0, SEEK_SET);
-	if (fread(&num_arquivos, sizeof(int), 1, archive) == 0){
+	if (fread(&info_conteudo.num_arquivos, sizeof(int), 1, archive) == 0){
 		fprintf(stderr, "Archive vazio\n");
 		return;
 	}
-	fread(&tam_conteudo, sizeof(long long int), 1, archive);
-	diretorio_pos = sizeof(long long int) + sizeof(int) + tam_conteudo; 
+	fread(&info_conteudo.tam_conteudo, sizeof(long long int), 1, archive);
+
+	info_conteudo.num_arquivos--;
+	info_conteudo.tam_conteudo -= v_diretorio[arquivo]->tamanho;
+
 	fseek(archive, 0, SEEK_SET);
+	fwrite(&info_conteudo.num_arquivos, sizeof(int), 1, archive);	
+	fwrite(&info_conteudo.tam_conteudo, sizeof(long long int), 1, archive);
 
-	//atualiza o numero de arquivos
-	num_arquivos--;
+	info_conteudo.diretorio_pos = sizeof(long long int) + sizeof(int) + info_conteudo.tam_conteudo;
 
-	if (num_arquivos == 0){
-		ftruncate(fileno(archive), 0);
-		return;
+	return info_conteudo;
+}
+
+void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[]){
+	for (int i = 0; i < info_conteudo.num_arq; i++){
+		if (v_diretorio[i]){
+		fwrite(&v_diretorio[i]->tam_nome, sizeof(int), 1, archive);
+		fwrite(v_diretorio[i]->nome, sizeof(char), v_diretorio[i]->tam_nome , archive);
+		fwrite(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);
+		fwrite(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);
+		fwrite(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);
+		fwrite(&v_diretorio[i]->permissoes, sizeof(mode_t), 1, archive);
+		fwrite(&v_diretorio[i]->ultima_modificacao, sizeof(time_t), 1, archive);
+		}
 	}
+}
 
-	tam_conteudo -= v_diretorio[arquivo]->tamanho;
-	fwrite(&num_arquivos, sizeof(int), 1, archive);	
-	fwrite(&tam_conteudo, sizeof(long long int), 1, archive);
-
-	if (arquivo < 0){
-		fprintf(stderr, "Arquivo nao encontrado\n");
-		return;
-	}
-
+void move_conteudo(FILE* archive, struct diretorio* v_diretorio[], int arquivo, long long int diretorio_pos){
 	long long int nova_pos = v_diretorio[arquivo]->posicao;
 	long long int antiga_pos = nova_pos + v_diretorio[arquivo]->tamanho;
-	long long int tam_mover = diretorio_pos - antiga_pos;
+	long long int tam_mover = diretorio_pos - nova_pos - v_diretorio[arquivo]->tamanho;
 
 	//calcula o carregamento em blocos 
-	long long int num_blocos = tam_mover / 1024;
-	long long int resto = tam_mover % 1024;
+	long long int num_blocos = tam_mover / MAX_STRING;
+	long long int resto = tam_mover % MAX_STRING;
 
+	char* buffer = malloc(sizeof(char) * MAX_STRING), tam_nome;
 	//copia os blocos para a nova posicao no archive 
 	for (int i = 0; i < num_blocos; i++){
 		fseek(archive, antiga_pos, SEEK_SET);
-		fread(&buffer, sizeof(char), 1024, archive);
+		fread(&buffer, sizeof(char), MAX_STRING, archive);
 		fseek(archive, nova_pos, SEEK_SET);
-		fwrite(&buffer, sizeof(char), 1024, archive);
-		nova_pos += 1024;
-		antiga_pos += 1024;
+		fwrite(&buffer, sizeof(char), MAX_STRING, archive);
+		nova_pos += MAX_STRING;
+		antiga_pos += MAX_STRING;
 	}
 
 	//copia o resto para a nova posicao no archive
@@ -114,20 +127,28 @@ void exclui(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
 	fread(&buffer, sizeof(char), resto, archive);
 	fseek(archive, nova_pos, SEEK_SET);
 	fwrite(&buffer, sizeof(char), resto, archive);
+	free(buffer);
+}
 
-	//atualiza o diretorio
-	for (int i = 0; i < num_arquivos; i++){
-		if (i != arquivo){
-			tam_nome = strlen(v_diretorio[i]->nome);
-			fwrite(&tam_nome, sizeof(int), 1, archive);
-			fwrite(v_diretorio[i]->nome, sizeof(char), tam_nome , archive);
-			fwrite(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);
-			fwrite(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);
-			fwrite(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);
-			fwrite(&v_diretorio[i]->permissoes, sizeof(mode_t), 1, archive);
-			fwrite(&v_diretorio[i]->ultima_modificacao, sizeof(time_t), 1, archive);
-		}
+void exclui(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){
+
+	//atualiza o numero de arquivos e o tamanho do conteudo
+	struct conteudo info_conteudo = sub_info_conteudos(archive, v_diretorio);
+	if (info_conteudo.num_arquivos == 0){
+		ftruncate(fileno(archive), 0);
+		return;
 	}
+
+	int arquivo = info_arquivo(archive, nome_arquivo, v_diretorio);
+	if (arquivo < 0){
+		fprintf(stderr, "Arquivo nao encontrado\n");
+		return;
+	}
+
+	move_conteudo(archive, v_diretorio, arquivo, info_conteudo.diretorio_pos);
+
+	v_diretorio[arquivo] = NULL;
+	imprime_diretorio(archive, v_diretorio);
 
 	long long int tam_archive = ftell(archive);
 	//cortar archive
