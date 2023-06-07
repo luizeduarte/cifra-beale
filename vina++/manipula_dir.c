@@ -1,25 +1,4 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <string.h>
-#define MAX_STRING 1024
-
-//onde vai as informações do arquivo que estavam no diretorio? chmod
-//https://stackoverflow.com/questions/10323060/printing-file-permissions-like-ls-l-using-stat2-in-c
-
-struct diretorio{
-	char* nome;
-	long long int tamanho;
-	long long int posicao;
-	uid_t uid;
-	mode_t permissoes;
-	time_t ultima_modificacao;
-};
-
-struct conteudo{
-	unsigned int num_arq;
-	long long int tam_conteudo, diretorio_pos;
-};
+#include "manipula_dir.h"
 
 struct diretorio** le_diretorio(FILE* archive){
 	struct conteudo info_conteudo;
@@ -47,10 +26,42 @@ struct diretorio** le_diretorio(FILE* archive){
 	return v_diretorio;
 }
 
+struct diretorio* att_diretorio(struct diretorio* v_diretorio[], struct conteudo info_conteudo, struct stat info_arquivo, char* nome_arquivo){
+	v_diretorio = realloc(v_diretorio, info_conteudo.num_arq * sizeof(struct diretorio*));
+	v_diretorio[info_conteudo.num_arq - 1] = malloc(sizeof(struct diretorio));
+
+	int tam_nome = strlen(nome_arquivo);
+	v_diretorio[info_conteudo.num_arq - 1]->tam_nome = tam_nome;
+	v_diretorio[info_conteudo.num_arq - 1]->nome = malloc(sizeof(char) * tam_nome);
+	v_diretorio[info_conteudo.num_arq - 1]->nome = nome_arquivo;
+	v_diretorio[info_conteudo.num_arq - 1]->tamanho = info_arquivo.st_size;
+	v_diretorio[info_conteudo.num_arq - 1]->posicao = info_conteudo.tam_conteudo + sizeof(long long int) + sizeof(int) - info_arquivo.st_size;
+	v_diretorio[info_conteudo.num_arq - 1]->uid = info_arquivo.st_uid;
+	v_diretorio[info_conteudo.num_arq - 1]->permissoes = info_arquivo.st_mode;
+	v_diretorio[info_conteudo.num_arq - 1]->ultima_modificacao = info_arquivo.st_mtime;
+
+	return v_diretorio;
+}
+
+void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[], struct conteudo info_conteudo){
+	for (int i = 0; i < info_conteudo.num_arq; i++){
+		if (v_diretorio[i]){
+			fwrite(&v_diretorio[i]->tam_nome, sizeof(int), 1, archive);
+			fwrite(v_diretorio[i]->nome, sizeof(char), v_diretorio[i]->tam_nome , archive);
+			fwrite(&v_diretorio[i]->tamanho, sizeof(long long int), 1, archive);
+			fwrite(&v_diretorio[i]->posicao, sizeof(long long int), 1, archive);
+			fwrite(&v_diretorio[i]->uid, sizeof(uid_t), 1, archive);
+			fwrite(&v_diretorio[i]->permissoes, sizeof(mode_t), 1, archive);
+			fwrite(&v_diretorio[i]->ultima_modificacao, sizeof(time_t), 1, archive);
+		}
+	}
+}
+
 int id_arquivo(FILE *archive, char *nome_arquivo, struct diretorio *v_diretorio[]){
 	//recebe o archive e o nome de um arquivo, retornando o indice dele no vetor diretorio
 
-	int achou = 0, info_conteudo.num_arq;
+	int achou = 0;
+	struct conteudo info_conteudo;
 
 	fseek(archive, 0, SEEK_SET);
 	fread(&info_conteudo.num_arq, sizeof(int), 1, archive);		//le o numero de arquivos
@@ -66,44 +77,4 @@ int id_arquivo(FILE *archive, char *nome_arquivo, struct diretorio *v_diretorio[
 		return -1;
 
 	return info_conteudo.num_arq;
-}
-
-void copia_texto(FILE* arq_le, FILE* arq_escreve, long long int tam_texto){
-	char* buffer = malloc(sizeof(char) * MAX_STRING);
-
-	//calcula o numeros de blocos a serem lidos
-	long long int num_blocos = tam_texto / MAX_STRING;
-	int resto = tam_texto % MAX_STRING;
-
-	for (int i = 0; i < num_blocos; i++){
-		fread(buffer, sizeof(char), MAX_STRING, arq_le);
-		fwrite(buffer, sizeof(char), MAX_STRING, arq_escreve);
-	}
-	fread(buffer, sizeof(char), resto, arq_le);
-	fwrite(buffer, sizeof(char), resto, arq_escreve);
-	free(buffer);
-}
-
-void extrai(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]){	//verificar permissoes
-	int arquivo;
-
-	FILE* arq_novo = fopen(nome_arquivo, "w");
-
-	arquivo = id_arquivo(archive, nome_arquivo, v_diretorio);
-	if (arquivo < 0){
-		fprintf(stderr, "Arquivo nao encontrado no archive\n");
-		return;
-	}
-
-	fseek(arq_novo, v_diretorio[arquivo]->posicao, SEEK_SET);	//vai ate o comeco do texto a ser copiado
-	copia_texto(archive, arq_novo, v_diretorio[arquivo]->tamanho);
-
-	fclose(arq_novo);
-}
-
-int main(){
-	FILE* archive = fopen("archive.bin", "rb");
-	struct diretorio* *v_diretorio = NULL;
-	extrai(archive, "teste.txt", v_diretorio);
-	return 0;
 }
