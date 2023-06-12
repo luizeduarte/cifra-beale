@@ -1,3 +1,5 @@
+#ifndef MANIPULA_DIR_H
+#define MANIPULA_DIR_H
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -22,8 +24,10 @@ struct conteudo{
 
 struct diretorio** le_diretorio(FILE* archive);
 
-struct diretorio* att_diretorio(struct diretorio* v_diretorio[], struct conteudo info_conteudo, struct stat info_arquivo, char* nome_arquivo);
+struct diretorio** att_diretorio(struct diretorio* v_diretorio[], struct conteudo* info_conteudo, struct stat info_arquivo, char* nome_arquivo);
 
-void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[], struct conteudo info_conteudo);
+void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[], int num_arq);
 
 int id_arquivo(FILE *archive, char *nome_arquivo, struct diretorio *v_diretorio[]);
+
+#endif
