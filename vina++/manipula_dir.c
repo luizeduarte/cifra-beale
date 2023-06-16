@@ -1,13 +1,16 @@
 #include "manipula_dir.h"
+#include "manipula_conteudo.h"
 
 struct diretorio** le_diretorio(FILE* archive){
+	/*a funcao recebe um ponteiro para o archive como argumento e coloca as
+	informacoes de cada arquivo em um vetor de ponteiros para structs, retornando tal vetor*/
 	struct conteudo* info_conteudo;
 	struct diretorio* *v_diretorio;
 
 	info_conteudo = conteudo(archive);
 	v_diretorio = malloc(info_conteudo->num_arq * sizeof(struct diretorio*));
-	fseek(archive, info_conteudo->diretorio_pos, SEEK_SET);	//vai para o diretorio
 
+	fseek(archive, info_conteudo->diretorio_pos, SEEK_SET);	//vai para o diretorio
 	for (int i = 0; i < info_conteudo->num_arq; i++){
 		v_diretorio[i] = malloc(sizeof(struct diretorio));
 		fread(&v_diretorio[i]->tam_nome, sizeof(int), 1, archive);	//le o tamanho do nome do arquivo
@@ -24,6 +27,9 @@ struct diretorio** le_diretorio(FILE* archive){
 }
 
 struct diretorio** att_diretorio(struct diretorio* v_diretorio[], struct conteudo* info_conteudo, struct stat info_arquivo, char* nome_arquivo){
+	/*a funcao recebe como argumento um vetor de ponteiros para struct, um ponteiro para struct contendo as informacoes do conteudo, uma struct
+	do tipo stat do arquivo novo inserido e, por fim, o nome desse arquivo. Ela adiciona ao fim do vetor as informacoes do novo arquivo que sera
+	adicionado ao archive, retornando tal vetor atualizado*/
 	v_diretorio = realloc(v_diretorio, info_conteudo->num_arq * sizeof(struct diretorio*));
 	v_diretorio[info_conteudo->num_arq - 1] = malloc(sizeof(struct diretorio));
 
@@ -41,6 +47,8 @@ struct diretorio** att_diretorio(struct diretorio* v_diretorio[], struct conteud
 }
 
 void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[], int num_arq){
+	/*a funcao imprime ao final da area de conteudos do archive o diretorio. 
+	O ponteiro para escrever no mesmo deve ser posicionado antes de chamar a funcao.*/
 	for (int i = 0; i < num_arq; i++){
 		if (v_diretorio[i]){
 			fwrite(&v_diretorio[i]->tam_nome, sizeof(int), 1, archive);
@@ -55,7 +63,8 @@ void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[], int num_a
 }
 
 int id_arquivo(FILE *archive, char *nome_arquivo, struct diretorio *v_diretorio[]){
-	//recebe o archive e o nome de um arquivo, retornando o indice dele no vetor diretorio
+	/*a funcao recebe o archive e o nome de um arquivo e um vetor de ponteiros 
+	para structs diretorio, retornando o indice dele no vetor*/
 
 	int achou = 0, num_arq;
 

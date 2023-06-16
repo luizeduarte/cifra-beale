@@ -7,6 +7,7 @@
 #include <string.h>
 #define MAX_STRING 1024
 
+//add ordem no arquivo
 struct diretorio{
 	int tam_nome;
 	char* nome;

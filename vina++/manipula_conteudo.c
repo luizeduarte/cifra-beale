@@ -1,22 +1,30 @@
 #include "manipula_conteudo.h"
 
 struct conteudo* conteudo(FILE* archive){
-	struct conteudo info_conteudo;
+	/*a funcao recebe um ponteiro para o archive e le as informacoes do conteudo, sendo estas tamanho, numero de arquivos e onde acaba,
+	retornando um ponteiro para uma struct com essas informacoes*/
+	struct conteudo* info_conteudo = malloc(sizeof(struct conteudo));
 
+	//as informacoes se localizam no comeco do archive
 	fseek(archive, 0, SEEK_SET);
-	if (fread(&info_conteudo.num_arq, sizeof(int), 1, archive) == 0){
-		info_conteudo.num_arq = 0;
-		info_conteudo.tam_conteudo = 0;
-		info_conteudo.diretorio_pos = 0;
-		return &info_conteudo;
+	if (fread(&info_conteudo->num_arq, sizeof(int), 1, archive) == 0){
+		//se estiver vazio, inicializa as variaveis
+		info_conteudo->num_arq = 0;
+		info_conteudo->tam_conteudo = 0;
+		info_conteudo->diretorio_pos = 0;
+		return info_conteudo;
 	}
 
-	fread(&info_conteudo.tam_conteudo, sizeof(long long int), 1, archive);
-	info_conteudo.diretorio_pos = info_conteudo.tam_conteudo + sizeof(long long int) + sizeof(int);
-	return &info_conteudo;
+	fread(&info_conteudo->tam_conteudo, sizeof(long long int), 1, archive);
+	//o final dos conteudos, ou onde o diretorio comeca, se localiza apos o tamanho do conteudo
+	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int);
+	return info_conteudo;
 }
 
 void copia_texto(FILE* arq_le, FILE* arq_escreve, long long int tam_texto){
+	/*a funcao recebe ponteiros para os arquivos que deseja ler e escrever,
+	alem do tamanho do texto que sera copiado de um para outro.
+	Os ponteiros das funcoes de leitura e escrita devem ser posicionados fora da funcao*/
 	char* buffer = malloc(sizeof(char) * MAX_STRING);
 
 	//calcula o numeros de blocos a serem lidos
@@ -32,13 +40,14 @@ void copia_texto(FILE* arq_le, FILE* arq_escreve, long long int tam_texto){
 	free(buffer);
 }
 
-struct conteudo* add_info_conteudo(FILE* archive, struct stat info_arquivo){
-	//atualiza as variaveis do numero de arquivos e o tamanho dos conteudos, localizados no comeco do archive
-	struct conteudo* info_conteudo = conteudo(archive);
+struct conteudo* add_info_conteudo(FILE* archive, long long int tam_arquivo){
+	/*a funcao recebe um ponteiro para o archive e o tamanho do novo arquivo a ser adicionado nele,
+	atualizando as informacoes de conteudo no comeco e retornando um ponteiro para uma struct com tais informacoes*/
+	struct conteudo* info_conteudo = conteudo(archive);	//le as informacoes antigas
 
 	info_conteudo->num_arq++;
 	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int);
-	info_conteudo->tam_conteudo += info_arquivo.st_size;
+	info_conteudo->tam_conteudo += tam_arquivo;
 
 	//escreve no archive os valores atualizados
 	fseek(archive, 0, SEEK_SET);
@@ -48,17 +57,15 @@ struct conteudo* add_info_conteudo(FILE* archive, struct stat info_arquivo){
 	return info_conteudo;
 }
 
-struct conteudo* sub_info_conteudos(FILE* archive, struct diretorio* v_diretorio[], int arquivo){
-	struct conteudo* info_conteudo = conteudo(archive);
-
-	if (info_conteudo->num_arq == 0){
-		fprintf(stderr, "Archive vazio\n");
-		exit(1);
-	}
+struct conteudo* sub_info_conteudos(FILE* archive, long long int tam_arquivo){
+	/*a funcao recebe um ponteiro para o archive e o tamanho do novo arquivo a ser removido dele,
+	atualizando as informacoes de conteudo no comeco e retornando um ponteiro para uma struct com tais informacoes*/
+	struct conteudo* info_conteudo = conteudo(archive);	//le as informacoes antigas
 
 	info_conteudo->num_arq--;
-	info_conteudo->tam_conteudo -= v_diretorio[arquivo]->tamanho;
+	info_conteudo->tam_conteudo -= tam_arquivo;
 
+	//escreve no archive os valores atualizados
 	fseek(archive, 0, SEEK_SET);
 	fwrite(&info_conteudo->num_arq, sizeof(int), 1, archive);	
 	fwrite(&info_conteudo->tam_conteudo, sizeof(long long int), 1, archive);
@@ -67,10 +74,14 @@ struct conteudo* sub_info_conteudos(FILE* archive, struct diretorio* v_diretorio
 }
 
 
-void move_conteudo(FILE* archive, struct diretorio* v_diretorio[], int arquivo, long long int diretorio_pos){
-	long long int nova_pos = v_diretorio[arquivo]->posicao;
-	long long int antiga_pos = nova_pos + v_diretorio[arquivo]->tamanho;
-	long long int tam_mover = diretorio_pos - antiga_pos;
+void move_conteudo(FILE* archive, struct diretorio* diretorio, long long int diretorio_pos){
+	/*a funcao recebe um ponteiro para o archive e para a struct do arquivo a ser excluido,
+	alem da posicao do diretorio. Ela move para tras o conteudo localizado apos o arquivo 
+	que deseja remover, escrevendo por cima do mesmo*/
+
+	long long int nova_pos = diretorio->posicao;	//onde comeca o arquivo a ser removido
+	long long int antiga_pos = nova_pos + diretorio->tamanho;	//onde comeca o arquivo seguinte dele 
+	long long int tam_mover = diretorio_pos - antiga_pos;	//tamanho do conteudo a ser movido
 
 	//calcula o carregamento em blocos 
 	long long int num_blocos = tam_mover / MAX_STRING;

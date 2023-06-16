@@ -3,8 +3,8 @@ CFLAGS = -g -Wall
 
 all: vina++
 
-vina++: main.o funcoes_principais.o manipula_dir.o manipula_conteudo.o
-	$(CC) main.o funcoes_principais.o manipula_dir.o manipula_conteudo.o -o vina++
+vina++: main.o funcoes_principais.o manipula_dir.o manipula_conteudo.o abre_arquivos.o
+	$(CC) $^ -o vina++
 
 main.o: main.c
 	$(CC) -c $(CFLAGS) main.c -o main.o
@@ -17,6 +17,9 @@ manipula_dir.o: manipula_dir.c
 
 manipula_conteudo.o: manipula_conteudo.c
 	$(CC) -c $(CFLAGS) manipula_conteudo.c -o manipula_conteudo.o
+
+abre_arquivos.o: abre_arquivos.c
+	$(CC) -c $(CFLAGS) abre_arquivos.c -o abre_arquivos.o
 
 clean:
 	rm -f *.o
