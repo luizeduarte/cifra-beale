@@ -73,13 +73,13 @@ void insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio*
 
 }
 
-void insere_arg(FILE* archive, struct diretorio* v_diretorio[], int argc, char** argv){
+void insere_arg(FILE* archive, struct diretorio* v_diretorio[], int num_arq, char** argv, int optind){
 	/*a funcao insere no archive todos os arquivos passados como argumentos, 
 	substituindo os ja existentes pela outra versao*/
 	FILE* novo_arq;
 	int id_arq;
 
-	for (int i = 3; i < argc; i++){
+	for (int i = optind; i < num_arq; i++){
 		//exclui se ele ja estiver no archive
 		id_arq = id_arquivo(archive, argv[i], v_diretorio);
 		if(id_arq != -1){
@@ -132,31 +132,31 @@ void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diret
 	}
 }
 
-void exclui(FILE* archive, struct diretorio* v_diretorio[], int id_arq){
+int exclui(FILE* archive, struct diretorio* v_diretorio[], int id_arq){
 	//atualiza o numero de arquivos e o tamanho do conteudo
 	struct conteudo* info_conteudo = sub_info_conteudos(archive, v_diretorio[id_arq]->tamanho);
 
 	//se nao houver mais arquivos no archive, basta corta-lo no comeco
-	if (info_conteudo->num_arq == 0){
-		ftruncate(fileno(archive), 0);
-		return;
-	}
+	if (info_conteudo->num_arq == 0)
+		return 0;
 
 	//move o restante dos conteudos para o lugar do excluido
 	move_conteudo(archive, v_diretorio[id_arq], info_conteudo->diretorio_pos);
 
 	//imprime o diretorio sem o arquivo excluido, ao final do archive 
 	v_diretorio[id_arq] = NULL;
-	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);
+	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq + 1);
 
 	//corta o archive no final do diretorio
 	long long int tam_archive = ftell(archive) - 1;
 	ftruncate(fileno(archive), tam_archive);
+
+	return 1;
 }
 
-void exclui_arg(FILE* archive, struct diretorio* v_diretorio[], int argc, char** argv){
+void exclui_arg(FILE* archive, struct diretorio* v_diretorio[], int num_arq, char** argv, int optind){
 	int id_arq;
-	for (int i = 3; i < argc; i++){
+	for (int i = optind; i < num_arq; i++){
 		id_arq = id_arquivo(archive, argv[i], v_diretorio);
 		if (id_arq == -1){
 			fprintf(stderr, "Arquivo %s nao existe no archive\n", argv[i]);

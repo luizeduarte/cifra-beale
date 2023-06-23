@@ -7,12 +7,16 @@
 #include "abre_arquivos.h"
 
 int main(int argc, char **argv){
-	int inserir = 0, substituir = 0, extrair = 0, excluir = 0, mover = 0, listar = 0;
-	char *opcoes = "iam:xrch", *nome_archive, *target;
-	int opt;
-
+	int cont = 0, inserir = 0, substituir = 0, extrair = 0, excluir = 0, mover = 0, listar = 0;
+	char *opcoes = "iam:xrch", *nome_archive, *target, opt;
 	//processa os argumentos da linha de comando
 	while((opt = getopt(argc, argv, opcoes)) != -1){
+		cont++;
+		if (cont > 1){
+			fprintf(stderr, "Apenas uma opcao pode ser passada\n");
+			return 1;
+		}
+
 		switch (opt){
 			case 'i':
 				inserir = 1;
@@ -53,7 +57,7 @@ int main(int argc, char **argv){
 		FILE *archive = cria_arquivo(nome_archive);
 		struct diretorio* *v_diretorio = le_diretorio(archive);
 
-		insere_arg(archive, v_diretorio, argc, argv);
+		insere_arg(archive, v_diretorio, argc, argv, optind + 1);
 	} else if (substituir){
 		FILE *archive = cria_arquivo(nome_archive);
 		struct diretorio* *v_diretorio = le_diretorio(archive);
@@ -73,7 +77,9 @@ int main(int argc, char **argv){
 		FILE* archive = abre_arquivo(nome_archive);
 		struct diretorio* *v_diretorio = le_diretorio(archive);
 
-		exclui_arg(archive, v_diretorio, argc, argv);
+		if (!exclui_arg(archive, v_diretorio, argc, argv, optind + 1)){
+			remove(nome_archive);
+		}
 	} else if (listar){
 
 	}

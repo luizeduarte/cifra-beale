@@ -5,7 +5,7 @@ FILE* cria_arquivo(char* arquivo){
 	leitura e escrita se ja existir, ou para escrita caso contrario*/
 	FILE* p_arquivo = fopen(arquivo, "r+b");
 
-	if (!arquivo)
+	if (!p_arquivo)
 		p_arquivo = fopen(arquivo, "wb");
 
 	return p_arquivo;
