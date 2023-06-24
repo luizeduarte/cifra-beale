@@ -31,4 +31,5 @@ void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[], int num_a
 
 int id_arquivo(FILE *archive, char *nome_arquivo, struct diretorio *v_diretorio[]);
 
+void desaloca_diretorio(FILE* archive, struct diretorio* v_diretorio[]);
 #endif

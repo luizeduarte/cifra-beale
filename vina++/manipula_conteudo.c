@@ -17,7 +17,7 @@ struct conteudo* conteudo(FILE* archive){
 
 	fread(&info_conteudo->tam_conteudo, sizeof(long long int), 1, archive);
 	//o final dos conteudos, ou onde o diretorio comeca, se localiza apos o tamanho do conteudo
-	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int);
+	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int)	;
 	return info_conteudo;
 }
 
