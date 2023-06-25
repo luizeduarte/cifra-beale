@@ -59,12 +59,12 @@ int main(int argc, char **argv){
 		archive = cria_arquivo(nome_archive);
 		v_diretorio = le_diretorio(archive);
 
-		insere_arg(nome_archive, archive, v_diretorio, argc, argv, optind + 1);
+		v_diretorio = insere_arg(nome_archive, archive, v_diretorio, argc, argv, optind + 1);
 	} else if (substituir){
 		archive = cria_arquivo(nome_archive);
 		v_diretorio = le_diretorio(archive);
 
-		substitui_arg(nome_archive, archive, v_diretorio, argc, argv);
+		v_diretorio = substitui_arg(nome_archive, archive, v_diretorio, argc, argv);
 	} else if (mover){
 		archive = abre_arquivo(nome_archive);
 		v_diretorio = le_diretorio(archive);

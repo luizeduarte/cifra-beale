@@ -5,11 +5,11 @@
 
 int verifica_sub(time_t ultima_modificacao, char* nome_arquivo);
 
-void substitui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int argc, char** argv);
+struct diretorio** substitui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int argc, char** argv);
 
-void insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio* v_diretorio[]);
+struct diretorio** insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio* v_diretorio[]);
 
-void insere_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int num_arq, char** argv, int optind);
+struct diretorio** insere_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int num_arq, char** argv, int optind);
 
 void extrai(FILE* archive, char* nome_arquivo, struct diretorio* arquivo);
 

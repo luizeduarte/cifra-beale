@@ -36,7 +36,7 @@ struct diretorio** adiciona_diretorio(struct diretorio* v_diretorio[], struct co
 	int tam_nome = strlen(nome_arquivo);
 	v_diretorio[info_conteudo->num_arq - 1]->tam_nome = tam_nome;
 	v_diretorio[info_conteudo->num_arq - 1]->nome = malloc(sizeof(char) * tam_nome);
-	v_diretorio[info_conteudo->num_arq - 1]->nome = nome_arquivo;
+	strncpy(v_diretorio[info_conteudo->num_arq - 1]->nome, nome_arquivo, tam_nome);
 	v_diretorio[info_conteudo->num_arq - 1]->tamanho = info_arquivo.st_size;
 	v_diretorio[info_conteudo->num_arq - 1]->posicao = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int) - info_arquivo.st_size;
 	v_diretorio[info_conteudo->num_arq - 1]->uid = info_arquivo.st_uid;
@@ -66,7 +66,7 @@ int id_arquivo(FILE *archive, char *nome_arquivo, struct diretorio *v_diretorio[
 	/*a funcao recebe o archive e o nome de um arquivo e um vetor de ponteiros 
 	para structs diretorio, retornando o indice dele no vetor*/
 
-	int achou = 0, num_arq;
+	int achou = 0, num_arq = 0;
 
 	fseek(archive, 0, SEEK_SET);
 	if (fread(&num_arq, sizeof(int), 1, archive) == 0)		//le o numero de arquivos
