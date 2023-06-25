@@ -82,7 +82,10 @@ void move_conteudo(FILE* archive, struct diretorio* arquivo, long long int diret
 	long long int nova_pos = arquivo->posicao;	//onde comeca o arquivo a ser removido
 	long long int antiga_pos = nova_pos + arquivo->tamanho;	//onde comeca o arquivo seguinte dele 
 	long long int tam_mover = diretorio_pos - antiga_pos;	//tamanho do conteudo a ser movido
-
+	if (tam_mover == 0){	//o arquivo eh o ultimo do archive
+		fseek(archive, nova_pos + 1, SEEK_SET);
+		return;
+	}
 	//calcula o carregamento em blocos 
 	long long int num_blocos = tam_mover / MAX_STRING;
 	long long int resto = tam_mover % MAX_STRING;

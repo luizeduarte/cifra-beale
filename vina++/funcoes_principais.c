@@ -1,5 +1,6 @@
 #include "funcoes_principais.h"
 #include <unistd.h>
+#include <pwd.h>
 
 int verifica_sub(time_t ultima_modificacao, char* nome_arquivo){
 	/*a funcao verifica se o arquivo deve ser substituido no archive,
@@ -43,6 +44,7 @@ void substitui_arg(char* nome_archive, FILE* archive, struct diretorio* v_direto
 
 	fseek(archive, 0, SEEK_SET);
 	fread(&total_arq, sizeof(int), 1, archive);
+	fseek(archive, 0, SEEK_END);
 	imprime_diretorio(archive, v_diretorio, total_arq);
 }
 
@@ -62,6 +64,7 @@ void insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio*
 	fseek(archive, info_conteudo->diretorio_pos, SEEK_SET);
 	//copia o texto do arquivo novo para o archive
 	copia_texto(arq_novo, archive, info_arquivo.st_size);
+	ftruncate(fileno(archive), ftell(archive) - 1);	//corta o archive no final do texto	
 
 	//atualiza o diretorio com o novo arquivo
 	adiciona_diretorio(v_diretorio, info_conteudo, info_arquivo, nome_arquivo);
@@ -90,14 +93,29 @@ void insere_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio
 
 	fseek(archive, 0, SEEK_SET);
 	fread(&total_arq, sizeof(int), 1, archive);
-    // arrumar o fseek, que ficou no incio ai imprime o diretorio comecando em 4
+	fseek(archive, 0, SEEK_END);
 	imprime_diretorio(archive, v_diretorio, total_arq);
 }
-//https://stackoverflow.com/questions/10323060/printing-file-permissions-like-ls-l-using-stat2-in-c
+
+void cria_dir(char* caminho){
+	/*a funcao cria um diretorio com o nome passado como argumento, caso ele nao exista*/
+	char* fim_dir, *nome_dir;
+
+	nome_dir = strchr(caminho, '/');
+	while(nome_dir != NULL){
+		*nome_dir = '\0';	//delimita ate onde vai o nome do dir para criar
+		mkdir(caminho, 0777);
+		*nome_dir = '/';	//libera para diretorios intermediarios
+		fim_dir = nome_dir + 1;
+		nome_dir = strchr(fim_dir, '/');	//pega o nome do proximo dir
+	}
+}
 
 void extrai(FILE* archive, char* nome_arquivo, struct diretorio* arquivo){
 
-	FILE* arq_novo = fopen(nome_arquivo, "w");
+	cria_dir(nome_arquivo);		//cria o diretorio caso ele nao exista 
+	FILE* arq_novo = fopen(nome_arquivo, "w+");
+
 	fseek(archive, arquivo->posicao, SEEK_SET);	//vai ate o comeco do texto a ser copiado
 	copia_texto(archive, arq_novo, arquivo->tamanho);
 	chmod(nome_arquivo, arquivo->permissoes);	//atribui as permissoes ao arquivo criado
@@ -147,8 +165,8 @@ void exclui(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], 
 	move_conteudo(archive, v_diretorio[id_arq], info_conteudo->diretorio_pos);
 
 	//retira o arquivo do diretorio e atualiza a posicao do restante
-	for (int i = id_arq + 1; i < info_conteudo->num_arq; i++){
-		v_diretorio[i]->posicao = - v_diretorio[id_arq]->tamanho;
+	for (int i = id_arq + 1; i <= info_conteudo->num_arq; i++){
+		v_diretorio[i]->posicao -= v_diretorio[id_arq]->tamanho;
 	}
 	for (int i = id_arq; i < info_conteudo->num_arq; i++){
 		v_diretorio[i] = v_diretorio[i + 1];
@@ -170,16 +188,15 @@ void exclui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio
 
 	for (int i = optind; i < num_arq; i++){
 		id_arq = id_arquivo(archive, argv[i], v_diretorio);
-		if (id_arq == -1){
+		if (id_arq == -1)
 			fprintf(stderr, "arquivo %s nao existe no archive\n", argv[i]);
-			return;
-		}
-		
-		exclui(nome_archive, archive, v_diretorio, id_arq);
+		else 
+			exclui(nome_archive, archive, v_diretorio, id_arq);
 	}
 
 	fseek(archive, 0, SEEK_SET);
 	fread(&total_arq, sizeof(int), 1, archive);
+	fseek(archive, 0, SEEK_END);
 	imprime_diretorio(archive, v_diretorio, total_arq);
 }
 
@@ -194,13 +211,13 @@ void move(FILE* archive, char* nome_target, char* nome_arquivo, struct diretorio
 	struct diretorio* temp = v_diretorio[arquivo];
 
 	if (arquivo > target){	//se o arquivo estiver a frente do target, move para tras
-		for (int i = arquivo; i < target; i--){
+		for (int i = arquivo; i > target; i--){
 			v_diretorio[i] = v_diretorio[i - 1];
 		}
 		v_diretorio[target + 1] = temp;
 
 	} else if (arquivo < target){	//se o arquivo estiver atras do target, move para frente
-		for (int i = arquivo; i <= target; i++){
+		for (int i = arquivo; i < target; i++){
 			v_diretorio[i] = v_diretorio[i + 1];
 		}
 		v_diretorio[target] = temp;
@@ -210,4 +227,31 @@ void move(FILE* archive, char* nome_target, char* nome_arquivo, struct diretorio
 	struct conteudo* info_conteudo = conteudo(archive);
 	fseek(archive, info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int), SEEK_SET);
 	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);
+}
+
+void lista_arq(FILE* archive, struct diretorio* v_diretorio[]){
+	char permissoes[10];
+	int num_arq;
+
+	fseek(archive, 0, SEEK_SET);
+	fread(&num_arq, sizeof(int), 1, archive);
+	for (int i = 0; i < num_arq; i++){
+		//prepara as informacoes de permissoes 
+		permissoes[0] = (v_diretorio[i]->permissoes & S_IRUSR) ? 'r' : '-';
+		permissoes[1] = (v_diretorio[i]->permissoes & S_IWUSR) ? 'w' : '-';
+		permissoes[2] = (v_diretorio[i]->permissoes & S_IXUSR) ? 'x' : '-';
+		permissoes[3] = (v_diretorio[i]->permissoes & S_IRGRP) ? 'r' : '-';
+		permissoes[4] = (v_diretorio[i]->permissoes & S_IWGRP) ? 'w' : '-';
+		permissoes[5] = (v_diretorio[i]->permissoes & S_IXGRP) ? 'x' : '-';
+		permissoes[6] = (v_diretorio[i]->permissoes & S_IROTH) ? 'r' : '-';
+		permissoes[7] = (v_diretorio[i]->permissoes & S_IWOTH) ? 'w' : '-';
+		permissoes[8] = (v_diretorio[i]->permissoes & S_IXOTH) ? 'x' : '-';
+		permissoes[9] = '\0';
+
+		//transforma uid em string
+		struct passwd *pw = getpwuid(v_diretorio[i]->uid);
+
+		printf("%s %s\t%8lld\t%ld\t%s\n", permissoes, pw->pw_name, 
+			v_diretorio[i]->tamanho, v_diretorio[i]->ultima_modificacao, v_diretorio[i]->nome);
+	}
 }

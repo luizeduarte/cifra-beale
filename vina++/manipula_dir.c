@@ -90,6 +90,7 @@ void desaloca_diretorio(FILE* archive, struct diretorio* v_diretorio[]){
 	/*a funcao recebe um vetor de ponteiros para structs diretorio e o numero de arquivos
 	que ele contem, desalocando a memoria alocada*/
 	int num_arq;
+	fseek(archive, 0, SEEK_SET);
 	fread(&num_arq, sizeof(int), 1, archive);	//le o numero de arquivos
 	for (int i = 0; i < num_arq; i++){
 		free(v_diretorio[i]->nome);

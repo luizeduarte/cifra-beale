@@ -49,8 +49,8 @@ int main(int argc, char **argv){
 		}
 	}
 
-	if (optind >= argc){ 	//nao foi passado o nome do arquivo
-		fprintf(stderr, "Faltou o nome do arquivo\n");
+	if ((optind >= argc) && (!listar)){ 	//nao foi passado o nome do arquivo
+		fprintf(stderr, "nome do arquivo faltando\n");
 		return 1;
 	}
 	nome_archive = argv[optind];
@@ -81,7 +81,10 @@ int main(int argc, char **argv){
 
 		exclui_arg(nome_archive, archive, v_diretorio, argc, argv, optind + 1);
 	} else if (listar){
+		archive = abre_arquivo(nome_archive);
+		v_diretorio = le_diretorio(archive);
 
+		lista_arq(archive, v_diretorio);
 	}
 
 	desaloca_diretorio(archive, v_diretorio);

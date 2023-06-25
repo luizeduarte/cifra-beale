@@ -17,7 +17,7 @@ FILE* abre_arquivo(char* arquivo){
 	FILE* p_arquivo = fopen(arquivo, "r+b");
 
 	if (!p_arquivo)
-		fprintf(stderr, "Arquivo %s nao existe\n", arquivo);
+		fprintf(stderr, "arquivo %s nao existe\n", arquivo);
 
 	return p_arquivo;
 }
