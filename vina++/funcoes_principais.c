@@ -138,6 +138,7 @@ void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diret
 	int num_arquivos, id_arq;
 
 	if (argc == 3){		//extrai todos os arquivos
+        fseek(archive, 0, SEEK_SET);
 		fread(&num_arquivos, sizeof(int), 1, archive);
 		for (int i = 0; i < num_arquivos; i++)
 			extrai(archive, v_diretorio[i]->nome, v_diretorio[i]);
@@ -148,7 +149,7 @@ void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diret
 			if (id_arq < 0)
 				fprintf(stderr, "arquivo nao encontrado no archive\n");
 			else 
-				extrai(archive, v_diretorio[i]->nome, v_diretorio[id_arq]);
+				extrai(archive, v_diretorio[id_arq]->nome, v_diretorio[id_arq]);
 		}
 	}
 }
