@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
+#include "manipula_conteudo.h"
 #define MAX_STRING 1024
 
 //add ordem no arquivo
@@ -18,14 +19,9 @@ struct diretorio{
 	time_t ultima_modificacao;
 };
 
-struct conteudo{
-	unsigned int num_arq;
-	long long int tam_conteudo, diretorio_pos;
-};
-
 struct diretorio** le_diretorio(FILE* archive);
 
-struct diretorio** att_diretorio(struct diretorio* v_diretorio[], struct conteudo* info_conteudo, struct stat info_arquivo, char* nome_arquivo);
+struct diretorio** adiciona_diretorio(struct diretorio* v_diretorio[], struct conteudo* info_conteudo, struct stat info_arquivo, char* nome_arquivo);
 
 void imprime_diretorio(FILE* archive, struct diretorio* v_diretorio[], int num_arq);
 

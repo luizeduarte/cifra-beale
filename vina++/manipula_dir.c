@@ -26,7 +26,7 @@ struct diretorio** le_diretorio(FILE* archive){
 	return v_diretorio;
 }
 
-struct diretorio** att_diretorio(struct diretorio* v_diretorio[], struct conteudo* info_conteudo, struct stat info_arquivo, char* nome_arquivo){
+struct diretorio** adiciona_diretorio(struct diretorio* v_diretorio[], struct conteudo* info_conteudo, struct stat info_arquivo, char* nome_arquivo){
 	/*a funcao recebe como argumento um vetor de ponteiros para struct, um ponteiro para struct contendo as informacoes do conteudo, uma struct
 	do tipo stat do arquivo novo inserido e, por fim, o nome desse arquivo. Ela adiciona ao fim do vetor as informacoes do novo arquivo que sera
 	adicionado ao archive, retornando tal vetor atualizado*/

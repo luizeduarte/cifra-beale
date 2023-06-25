@@ -60,7 +60,7 @@ void insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio*
 	copia_texto(arq_novo, archive, info_arquivo.st_size);
 
 	//atualiza o diretorio com o novo arquivo
-	v_diretorio = att_diretorio(v_diretorio, info_conteudo, info_arquivo, nome_arquivo);
+	v_diretorio = adiciona_diretorio(v_diretorio, info_conteudo, info_arquivo, nome_arquivo);
 
 	//imprime o diretório no fim do archive
 	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);

@@ -13,9 +13,7 @@ void insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio*
 
 void insere_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int num_arq, char** argv, int optind);
 
-void atribui_permissoes(char* nome_arquivo, struct diretorio* arquivo);
-
-void extrai(FILE* archive, char* nome_arquivo, struct diretorio* v_diretorio[]);
+void extrai(FILE* archive, char* nome_arquivo, struct diretorio* arquivo);
 
 void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diretorio[]);
 

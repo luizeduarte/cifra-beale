@@ -8,6 +8,11 @@
 #define MAX_STRING 1024
 #include "manipula_dir.h"
 
+struct conteudo{
+	unsigned int num_arq;
+	long long int tam_conteudo, diretorio_pos;
+};
+
 struct conteudo* conteudo(FILE* archive);
 
 void copia_texto(FILE* arq_le, FILE* arq_escreve, long long int tam_texto);
