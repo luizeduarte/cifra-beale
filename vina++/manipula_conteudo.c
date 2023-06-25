@@ -11,13 +11,13 @@ struct conteudo* conteudo(FILE* archive){
 		//se estiver vazio, inicializa as variaveis
 		info_conteudo->num_arq = 0;
 		info_conteudo->tam_conteudo = 0;
-		info_conteudo->diretorio_pos = 0;
+		info_conteudo->diretorio_pos = sizeof(long long int) + sizeof(int);
 		return info_conteudo;
 	}
 
 	fread(&info_conteudo->tam_conteudo, sizeof(long long int), 1, archive);
 	//o final dos conteudos, ou onde o diretorio comeca, se localiza apos o tamanho do conteudo
-	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int)	;
+	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int);
 	return info_conteudo;
 }
 
@@ -74,13 +74,13 @@ struct conteudo* sub_info_conteudos(FILE* archive, long long int tam_arquivo){
 }
 
 
-void move_conteudo(FILE* archive, struct diretorio* diretorio, long long int diretorio_pos){
+void move_conteudo(FILE* archive, struct diretorio* arquivo, long long int diretorio_pos){
 	/*a funcao recebe um ponteiro para o archive e para a struct do arquivo a ser excluido,
 	alem da posicao do diretorio. Ela move para tras o conteudo localizado apos o arquivo 
 	que deseja remover, escrevendo por cima do mesmo*/
 
-	long long int nova_pos = diretorio->posicao;	//onde comeca o arquivo a ser removido
-	long long int antiga_pos = nova_pos + diretorio->tamanho;	//onde comeca o arquivo seguinte dele 
+	long long int nova_pos = arquivo->posicao;	//onde comeca o arquivo a ser removido
+	long long int antiga_pos = nova_pos + arquivo->tamanho;	//onde comeca o arquivo seguinte dele 
 	long long int tam_mover = diretorio_pos - antiga_pos;	//tamanho do conteudo a ser movido
 
 	//calcula o carregamento em blocos 

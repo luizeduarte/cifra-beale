@@ -5,13 +5,8 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAX_STRING 1024
 #include "manipula_dir.h"
-
-struct conteudo{
-	unsigned int num_arq;
-	long long int tam_conteudo, diretorio_pos;
-};
+#define MAX_STRING 1024
 
 struct conteudo* conteudo(FILE* archive);
 
