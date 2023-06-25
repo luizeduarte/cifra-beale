@@ -19,13 +19,16 @@ int verifica_sub(time_t ultima_modificacao, char* nome_arquivo){
 	return 0;
 }
 
-struct diretorio** substitui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int argc, char** argv){
+struct diretorio** substitui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int argc, char** argv, int optind){
+	/*a funcao atualiza o archive inserindo no fim dos conteudos e no diretorio as informacoes 
+	do arquivo novo apenas se ele for mais recente, para isso ela recebe o nome de tal arquivo, um ponteiro para ele e o archive,
+	alem de um vetor de ponteiros para structs diretorio*/
 	FILE *novo_arq;
 	int id_arq;
 	struct conteudo* info_conteudo = conteudo(archive);
 
 	//insere todos os arquivos passados como argumento
-	for (int i = 3; i < argc; i++){
+	for (int i = optind; i < argc; i++){
 		novo_arq = fopen(argv[i], "r");
 		if (!novo_arq){
 			fprintf(stderr, "erro ao abrir o arquivo %s", argv[i]);
@@ -117,6 +120,8 @@ void cria_dir(char* caminho){
 }
 
 void extrai(FILE* archive, char* nome_arquivo, struct diretorio* arquivo){
+	/* a funcao recebe um ponteiro para o archive, o nome do arquivo a 
+	ser extraido e um onteiro para ele do vetor de diretorios*/
 
 	cria_dir(nome_arquivo);		//cria o diretorio caso ele nao exista 
 	FILE* arq_novo = fopen(nome_arquivo, "w+");
@@ -128,14 +133,9 @@ void extrai(FILE* archive, char* nome_arquivo, struct diretorio* arquivo){
 }
 
 void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diretorio[]){
+	/* a funcao recebe as informacoes de argumentos passados para o programa, alem de 
+	um ponteiro para o archive e o vetor de diretorios, visaando extrair todos os arquivos pedidos*/
 	int num_arquivos, id_arq;
-
-	fseek(archive, 0, SEEK_END);
-	if (ftell(archive) == 0){
-		fprintf(stderr, "archive vazio\n");
-		return;
-	}
-	fseek(archive, 0, SEEK_SET);
 
 	if (argc == 3){		//extrai todos os arquivos
 		fread(&num_arquivos, sizeof(int), 1, archive);
@@ -154,6 +154,8 @@ void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diret
 }
 
 void exclui(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int id_arq, struct conteudo* info_conteudo){
+	/*a funcao exclui na area de conteudos um arquivo, movendo para cima os que vem apos ele. Para isso, ela recebe o nome do archive, 
+	um ponteiro para ele, um vetor de diretorio o indice nele do arquivo a ser removido e uma struct com as informacoes do conteudo*/
 	//atualiza o numero de arquivos e o tamanho do conteudo
 	info_conteudo->num_arq--;
 	info_conteudo->tam_conteudo -= v_diretorio[id_arq]->tamanho;
@@ -179,35 +181,33 @@ void exclui(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], 
 }
 
 void exclui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int num_arq, char** argv, int optind){
+	/*a funcao exclui todos os arquivos passados como argumento, para isso ela recebe o nome do archive, um ponteiro para 
+	ele, o vetor de diretorio e as informcoes dos argumentos*/
 	int id_arq;
 	struct conteudo* info_conteudo = conteudo(archive);
 
-	fseek(archive, 0, SEEK_END);
-	if (ftell(archive) == 0){
-		fprintf(stderr, "archive vazio\n");
-		return;
-	}
-	fseek(archive, 0, SEEK_SET);
-
 	for (int i = optind; i < num_arq; i++){
 		id_arq = id_arquivo(archive, argv[i], v_diretorio);
-		if (id_arq == -1)
+		if (id_arq == -1)	//arquivo nao esta no archive
 			fprintf(stderr, "arquivo %s nao existe no archive\n", argv[i]);
 		else 
 			exclui(nome_archive, archive, v_diretorio, id_arq, info_conteudo);
 	}
 
+	//atualiza o comeco dos conteudos e adiciona o diretorio
 	att_info_conteudo(archive, info_conteudo);
 	fseek(archive, 0, SEEK_END);
 	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);
 }
 
 void move(FILE* archive, char* nome_target, char* nome_arquivo, struct diretorio* v_diretorio[]){
+	/*a funcao move nos diretorios os arquivos passados como argumento, para isso ela recebe um ponteiro 
+	para o archive, o nome do target e do atquivo a ser movido e o vetor de diretorio*/
 	int target = id_arquivo(archive, nome_target, v_diretorio);
 	int arquivo = id_arquivo(archive, nome_arquivo, v_diretorio);
 	if ((target < 0) || (arquivo < 0)){
 		fprintf(stderr, "arquivo nao encontrado\n");
-		return;
+		exit(1);
 	}
 
 	struct diretorio* temp = v_diretorio[arquivo];
@@ -232,6 +232,8 @@ void move(FILE* archive, char* nome_target, char* nome_arquivo, struct diretorio
 }
 
 void lista_arq(FILE* archive, struct diretorio* v_diretorio[]){
+	/*a funcao lista os arquivos presentes no archive, para 
+	isso ela recebe um ponteiro para ele e um vetor de diretorios*/
 	char permissoes[10];
 	char tempo[20];
 	int num_arq;

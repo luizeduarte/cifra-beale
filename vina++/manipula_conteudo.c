@@ -41,6 +41,7 @@ void copia_texto(FILE* arq_le, FILE* arq_escreve, long long int tam_texto){
 }
 
 void att_info_conteudo(FILE* archive, struct conteudo* info_conteudo){
+	/**/
 	//escreve no archive os valores atualizados
 	fseek(archive, 0, SEEK_SET);
 	fwrite(&info_conteudo->num_arq, sizeof(int), 1, archive);	

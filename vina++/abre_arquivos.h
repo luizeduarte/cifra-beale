@@ -1,6 +1,7 @@
 #ifndef ABRE_ARQUIVOS_H
 #define ABRE_ARQUIVOS_H
 #include <stdio.h>
+#include <stdlib.h>
 
 FILE* cria_arquivo(char* arquivo);
 /*a funcao abre o arquivo passado como argumento para 

@@ -41,6 +41,7 @@ int main(int argc, char **argv){
 				break;
 			case 'h':
 				printf("O programa deve ser executado da seguinte forma:\n./vina++ <opção> <archive> [membro1 membro2 ...]\n");
+				return 0;
 				break;
 			//avisa se passou a especificacao errada
 			default:
@@ -64,7 +65,7 @@ int main(int argc, char **argv){
 		archive = cria_arquivo(nome_archive);
 		v_diretorio = le_diretorio(archive);
 
-		v_diretorio = substitui_arg(nome_archive, archive, v_diretorio, argc, argv);
+		v_diretorio = substitui_arg(nome_archive, archive, v_diretorio, argc, argv, optind + 1);
 	} else if (mover){
 		archive = abre_arquivo(nome_archive);
 		v_diretorio = le_diretorio(archive);
