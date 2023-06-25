@@ -6,7 +6,7 @@ FILE* cria_arquivo(char* arquivo){
 	FILE* p_arquivo = fopen(arquivo, "r+b");
 
 	if (!p_arquivo)
-		p_arquivo = fopen(arquivo, "wb");
+		p_arquivo = fopen(arquivo, "w+b");
 
 	return p_arquivo;
 }

@@ -90,6 +90,7 @@ void insere_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio
 
 	fseek(archive, 0, SEEK_SET);
 	fread(&total_arq, sizeof(int), 1, archive);
+    // arrumar o fseek, que ficou no incio ai imprime o diretorio comecando em 4
 	imprime_diretorio(archive, v_diretorio, total_arq);
 }
 //https://stackoverflow.com/questions/10323060/printing-file-permissions-like-ls-l-using-stat2-in-c
