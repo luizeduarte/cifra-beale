@@ -12,9 +12,7 @@ struct conteudo* conteudo(FILE* archive);
 
 void copia_texto(FILE* arq_le, FILE* arq_escreve, long long int tam_texto);
 
-struct conteudo* add_info_conteudo(FILE* archive, long long int tam_arquivo);
-
-struct conteudo* sub_info_conteudos(FILE* archive, long long int tam_arquivo);
+void att_info_conteudo(FILE* archive, struct conteudo* info_conteudo);
 
 void move_conteudo(FILE* archive, struct diretorio* diretorio, long long int diretorio_pos);
 

@@ -40,37 +40,11 @@ void copia_texto(FILE* arq_le, FILE* arq_escreve, long long int tam_texto){
 	free(buffer);
 }
 
-struct conteudo* add_info_conteudo(FILE* archive, long long int tam_arquivo){
-	/*a funcao recebe um ponteiro para o archive e o tamanho do novo arquivo a ser adicionado nele,
-	atualizando as informacoes de conteudo no comeco e retornando um ponteiro para uma struct com tais informacoes*/
-	struct conteudo* info_conteudo = conteudo(archive);	//le as informacoes antigas
-
-	info_conteudo->num_arq++;
-	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int);
-	info_conteudo->tam_conteudo += tam_arquivo;
-
-	//escreve no archive os valores atualizados
-	fseek(archive, 0, SEEK_SET);
-	fwrite(&info_conteudo->num_arq, sizeof(int), 1, archive);
-	fwrite(&info_conteudo->tam_conteudo, sizeof(long long int), 1, archive);
-
-	return info_conteudo;
-}
-
-struct conteudo* sub_info_conteudos(FILE* archive, long long int tam_arquivo){
-	/*a funcao recebe um ponteiro para o archive e o tamanho do novo arquivo a ser removido dele,
-	atualizando as informacoes de conteudo no comeco e retornando um ponteiro para uma struct com tais informacoes*/
-	struct conteudo* info_conteudo = conteudo(archive);	//le as informacoes antigas
-
-	info_conteudo->num_arq--;
-	info_conteudo->tam_conteudo -= tam_arquivo;
-
+void att_info_conteudo(FILE* archive, struct conteudo* info_conteudo){
 	//escreve no archive os valores atualizados
 	fseek(archive, 0, SEEK_SET);
 	fwrite(&info_conteudo->num_arq, sizeof(int), 1, archive);	
 	fwrite(&info_conteudo->tam_conteudo, sizeof(long long int), 1, archive);
-
-	return info_conteudo;
 }
 
 

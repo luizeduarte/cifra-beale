@@ -21,7 +21,8 @@ int verifica_sub(time_t ultima_modificacao, char* nome_arquivo){
 
 struct diretorio** substitui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int argc, char** argv){
 	FILE *novo_arq;
-	int id_arq, total_arq;
+	int id_arq;
+	struct conteudo* info_conteudo = conteudo(archive);
 
 	//insere todos os arquivos passados como argumento
 	for (int i = 3; i < argc; i++){
@@ -32,36 +33,35 @@ struct diretorio** substitui_arg(char* nome_archive, FILE* archive, struct diret
 
 		id_arq = id_arquivo(archive, argv[i], v_diretorio);
 		if (id_arq < 0){
-			v_diretorio = insere(argv[i], novo_arq, archive, v_diretorio);
+			v_diretorio = insere(argv[i], novo_arq, archive, v_diretorio, info_conteudo);
 		} else{ 
 			if (verifica_sub(v_diretorio[id_arq]->ultima_modificacao, argv[i])){
 				//se deve ser substituido, exclui o arquivo antigo e insere o novo
-				exclui(nome_archive, archive, v_diretorio, id_arq);
-				v_diretorio = insere(argv[i], novo_arq, archive, v_diretorio);
+				exclui(nome_archive, archive, v_diretorio, id_arq, info_conteudo);
+				v_diretorio = insere(argv[i], novo_arq, archive, v_diretorio, info_conteudo);
 			}
 		}
 		fclose(novo_arq);
 	}
 
-	fseek(archive, 0, SEEK_SET);
-	fread(&total_arq, sizeof(int), 1, archive);
+	att_info_conteudo(archive, info_conteudo);
 	fseek(archive, 0, SEEK_END);
-	imprime_diretorio(archive, v_diretorio, total_arq);
+	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);
     
-    return v_diretorio;
+	return v_diretorio;
 }
 
-struct diretorio** insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio* v_diretorio[]){
+struct diretorio** insere(char* nome_arquivo, FILE* arq_novo, FILE* archive, struct diretorio* v_diretorio[], struct conteudo* info_conteudo){
 	/*a funcao atualiza o archive inserindo no fim dos conteudos e no diretorio as informacoes 
 	do arquivo novo, para isso ela recebe o nome de tal arquivo, um ponteiro para ele e o archive,
 	alem de um vetor de ponteiros para structs diretorio*/
-	struct conteudo* info_conteudo;
 	struct stat info_arquivo;
-
 	stat(nome_arquivo, &info_arquivo);	//pega as informacoes do arquivo novo
 
 	//atualiza o numero de arquivos e o tamanho total dos conteudos no comeco do archive
-	info_conteudo = add_info_conteudo(archive, info_arquivo.st_size);
+	info_conteudo->num_arq++;
+	info_conteudo->diretorio_pos = info_conteudo->tam_conteudo + sizeof(long long int) + sizeof(int);
+	info_conteudo->tam_conteudo += info_arquivo.st_size;
 
 	//posiciona o ponteiro no fim dos conteudos
 	fseek(archive, info_conteudo->diretorio_pos, SEEK_SET);
@@ -77,28 +77,29 @@ struct diretorio** insere_arg(char* nome_archive, FILE* archive, struct diretori
 	/*a funcao insere no archive todos os arquivos passados como argumentos, 
 	substituindo os ja existentes pela outra versao*/
 	FILE* novo_arq;
-	int id_arq, total_arq;
+	int id_arq;
+	struct conteudo* info_conteudo = conteudo(archive);
 
 	for (int i = optind; i < num_arq; i++){
 		//exclui se ele ja estiver no archive
 		id_arq = id_arquivo(archive, argv[i], v_diretorio);
 		if(id_arq != -1){
-			exclui(nome_archive, archive, v_diretorio, id_arq);
+			exclui(nome_archive, archive, v_diretorio, id_arq, info_conteudo);
 		}
 
 		novo_arq = fopen(argv[i], "r");
 		if (!novo_arq)
 			fprintf(stderr, "erro ao abrir o arquivo %s, ele nao sera inserido\n", argv[i]);
-		else 
-			v_diretorio = insere(argv[i], novo_arq, archive, v_diretorio);
-		fclose(novo_arq);
+		else {
+			v_diretorio = insere(argv[i], novo_arq, archive, v_diretorio, info_conteudo);
+			fclose(novo_arq);
+		}
 	}
 
-	fseek(archive, 0, SEEK_SET);
-	fread(&total_arq, sizeof(int), 1, archive);
+	att_info_conteudo(archive, info_conteudo);
 	fseek(archive, 0, SEEK_END);
-	imprime_diretorio(archive, v_diretorio, total_arq);
-    return v_diretorio;
+	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);
+	return v_diretorio;
 }
 
 void cria_dir(char* caminho){
@@ -139,7 +140,7 @@ void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diret
 	if (argc == 3){		//extrai todos os arquivos
 		fread(&num_arquivos, sizeof(int), 1, archive);
 		for (int i = 0; i < num_arquivos; i++)
-            extrai(archive, v_diretorio[i]->nome, v_diretorio[i]);
+			extrai(archive, v_diretorio[i]->nome, v_diretorio[i]);
 
 	} else {
 		for (int i = 3; i < argc; i++){
@@ -152,9 +153,10 @@ void extrai_arg(int argc, char* argv[], FILE* archive, struct diretorio* v_diret
 	}
 }
 
-void exclui(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int id_arq){
+void exclui(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int id_arq, struct conteudo* info_conteudo){
 	//atualiza o numero de arquivos e o tamanho do conteudo
-	struct conteudo* info_conteudo = sub_info_conteudos(archive, v_diretorio[id_arq]->tamanho);
+	info_conteudo->num_arq--;
+	info_conteudo->tam_conteudo -= v_diretorio[id_arq]->tamanho;
 
 	//se nao houver mais arquivos no archive, basta corta-lo no comeco
 	if (info_conteudo->num_arq == 0)
@@ -162,6 +164,7 @@ void exclui(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], 
 
 	//move o restante dos conteudos para o lugar do excluido
 	move_conteudo(archive, v_diretorio[id_arq], info_conteudo->diretorio_pos);
+	info_conteudo->diretorio_pos -= v_diretorio[id_arq]->tamanho;
 
 	//retira o arquivo do diretorio e atualiza a posicao do restante
 	for (int i = id_arq + 1; i <= info_conteudo->num_arq; i++){
@@ -176,7 +179,8 @@ void exclui(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], 
 }
 
 void exclui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio[], int num_arq, char** argv, int optind){
-	int id_arq, total_arq;
+	int id_arq;
+	struct conteudo* info_conteudo = conteudo(archive);
 
 	fseek(archive, 0, SEEK_END);
 	if (ftell(archive) == 0){
@@ -190,13 +194,12 @@ void exclui_arg(char* nome_archive, FILE* archive, struct diretorio* v_diretorio
 		if (id_arq == -1)
 			fprintf(stderr, "arquivo %s nao existe no archive\n", argv[i]);
 		else 
-			exclui(nome_archive, archive, v_diretorio, id_arq);
+			exclui(nome_archive, archive, v_diretorio, id_arq, info_conteudo);
 	}
 
-	fseek(archive, 0, SEEK_SET);
-	fread(&total_arq, sizeof(int), 1, archive);
+	att_info_conteudo(archive, info_conteudo);
 	fseek(archive, 0, SEEK_END);
-	imprime_diretorio(archive, v_diretorio, total_arq);
+	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);
 }
 
 void move(FILE* archive, char* nome_target, char* nome_arquivo, struct diretorio* v_diretorio[]){
@@ -230,7 +233,7 @@ void move(FILE* archive, char* nome_target, char* nome_arquivo, struct diretorio
 
 void lista_arq(FILE* archive, struct diretorio* v_diretorio[]){
 	char permissoes[10];
-    char tempo[20];
+	char tempo[20];
 	int num_arq;
 
 	fseek(archive, 0, SEEK_SET);
@@ -250,8 +253,9 @@ void lista_arq(FILE* archive, struct diretorio* v_diretorio[]){
 
 		//transforma uid em string
 		struct passwd *pw = getpwuid(v_diretorio[i]->uid);
-        strftime(tempo, 20, "%Y-%m-%d %H:%M", localtime(&v_diretorio[i]->ultima_modificacao));
-		printf("%s %s\t%8lld\t%s\t%s\n", permissoes, pw->pw_name, 
+		strftime(tempo, 20, "%Y-%m-%d %H:%M", localtime(&v_diretorio[i]->ultima_modificacao));
+
+		printf("%s %s %8lld %s %s\n", permissoes, pw->pw_name, 
 			v_diretorio[i]->tamanho, tempo, v_diretorio[i]->nome);
 	}
 }
