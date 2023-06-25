@@ -97,7 +97,7 @@ struct diretorio** insere_arg(char* nome_archive, FILE* archive, struct diretori
 	}
 
 	att_info_conteudo(archive, info_conteudo);
-	fseek(archive, 0, SEEK_END);
+	fseek(archive, info_conteudo->tam_conteudo + sizeof(int) + sizeof(long long int), SEEK_SET);
 	imprime_diretorio(archive, v_diretorio, info_conteudo->num_arq);
 	return v_diretorio;
 }
